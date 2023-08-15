@@ -101,7 +101,7 @@ const HomeScreen = () => {
         </ScrollView>
       </SafeAreaView> */}
 
-      <ScrollView>
+      <ScrollView showsVerticalScrollIndicator={false}>
         <SafeAreaView>
           <View
             style={{
