@@ -145,7 +145,7 @@ const LoginScreen = ({ navigation }) => {
                     containerStyle={{ borderWidth: 0, margin: 0, padding: 0 }}
                     textStyle={{ borderWidth: 0, margin: 0, padding: 0 }}
                   />
-                  <TouchableOpacity onPress={()=>navigation.navigate("AnimationScreen")}>
+                  <TouchableOpacity onPress={()=>navigation.navigate("MyWebComponent")}>
                     <Text>Forgot password?</Text>
                   </TouchableOpacity>
                 </View>

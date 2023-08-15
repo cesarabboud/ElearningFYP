@@ -11,6 +11,7 @@ import {
   TouchableWithoutFeedback,
   
 } from "react-native";
+import MyWebComponent from "./screens/WebBrowser2";
 import Splash from "./screens/splash";
 import OnBoarding from "./onBoarding/onBoarding";
 import StartScreen from "./screens/StartScreen";
@@ -414,6 +415,10 @@ const App = ({ navigation }) => {
         <Stack.Screen 
         name="AnimationScreen"
         component={SearchResults}
+        />
+        <Stack.Screen
+        name="MyWebComponent"
+        component={MyWebComponent}
         />
       </Stack.Navigator>
     </NavigationContainer>
