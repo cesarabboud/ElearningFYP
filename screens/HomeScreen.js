@@ -18,20 +18,20 @@ import TestScreen from "./testScreen";
 import { StatusBar } from "react-native";
 import { IconButton } from "react-native-paper";
 const HomeScreen = () => {
-  const [currentTime, setCurrentTime] = useState("");
+  // const [currentTime, setCurrentTime] = useState("");
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      const now = new Date();
-      const hours = String(now.getHours()).padStart(2, "0");
-      const minutes = String(now.getMinutes()).padStart(2, "0");
-      const seconds = String(now.getSeconds()).padStart(2, "0");
+  // useEffect(() => {
+  //   const intervalId = setInterval(() => {
+  //     const now = new Date();
+  //     const hours = String(now.getHours()).padStart(2, "0");
+  //     const minutes = String(now.getMinutes()).padStart(2, "0");
+  //     const seconds = String(now.getSeconds()).padStart(2, "0");
 
-      setCurrentTime(`${hours}:${minutes}:${seconds}`);
-    }, 1000);
+  //     setCurrentTime(`${hours}:${minutes}:${seconds}`);
+  //   }, 1000);
 
-    return () => clearInterval(intervalId);
-  }, []);
+  //   return () => clearInterval(intervalId);
+  // }, []);
   /*const [currentIndex, setCurrentIndex] = useState(0);
   const carouselRef = useRef(null);*/
   const profileSvg = `<svg width="21" height="27" viewBox="0 0 21 27" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -120,7 +120,7 @@ const HomeScreen = () => {
                 gap: 15,
               }}
             >
-              <Text style={{ fontWeight: "500" }}>{currentTime}</Text>
+              {/* <Text style={{ fontWeight: "500" }}>{currentTime}</Text> */}
               <TouchableOpacity
                 onPress={() => navigation.navigate("Studentprofile")}
               >

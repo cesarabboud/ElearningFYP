@@ -70,12 +70,14 @@ const RadioButton = () => {
                     : {},
                 ]}
               /> */}
-              {/* <Text style={{ textAlign: "center",textTransform:'capitalize',fontSize:20 }}>{option.value}</Text> */}
+              <Text style={{ textAlign: "center",textTransform:'capitalize',fontSize:20 }}>
+                {option.value}
+                </Text>
             </View>
           </Pressable>
         ))}
-        <Text>{selectedOption}</Text>
-        <TouchableOpacity onPress={()=> selectedOption === 'student' ? navigation.navigate("BottomTab") : navigation.navigate("InstructorProfile")} disabled={ selectedOption == null ? true : false} style={{backgroundColor:selectedOption === null ? '#CCC' : '#0AB072',width:'80%',height:50,justifyContent:'center',alignItems:'center',borderRadius:10}}>
+        {/* <Text>{selectedOption}</Text> */}
+        <TouchableOpacity onPress={()=> selectedOption === 'student' ? navigation.navigate("BottomTab") : navigation.navigate("InstructorProfile")} disabled={ selectedOption == null ? true : false} style={{backgroundColor:selectedOption === null ? '#CCC' : '#0AB072',width:'80%',height:40,justifyContent:'center',alignItems:'center',borderRadius:10}}>
             <Text style={{ color: selectedOption ? "#fff" : "#0ab072",fontWeight:'600',fontSize:20,textTransform:'uppercase'}}>Continue</Text> 
             {/* <Button title="Continue"  color={selectedOption == null ? "#0AB072" : "#fff"}/> */}
         </TouchableOpacity>

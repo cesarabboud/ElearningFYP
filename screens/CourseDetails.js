@@ -9,6 +9,7 @@ import {
   ScrollView,
   Dimensions,
 } from "react-native";
+//import Animated,{ FadeInRight } from 'react-native-reanimated'
 import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { IconButton } from "react-native-paper";

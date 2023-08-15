@@ -17,9 +17,10 @@ import {
 import { StatusBar } from "expo-status-bar";
 import Icon from "react-native-vector-icons/FontAwesome";
 import Modal from "react-native-modal";
-import { IconButton } from "react-native-paper";
+import { IconButton,Provider } from "react-native-paper";
+import BottomSheetSearchFilter from './BottomSheetSearchFilter'
 let cnt=1, cnt2=0, catCnt=0;
-
+const ScreenWidth = Dimensions.get('screen').width
 const categories = [
   "Mobile Dev "+ ++catCnt,
   "Mobile Dev " + ++catCnt,
@@ -112,7 +113,8 @@ const SearchBar = () => {
     
   };
   return (
-    <TouchableWithoutFeedback onPress={handleScreenPress}>
+    <Provider>
+<TouchableWithoutFeedback onPress={handleScreenPress}>
       <ScrollView>
       <SafeAreaView>
         <View
@@ -155,7 +157,7 @@ const SearchBar = () => {
                 <Text style={{ color: "#008BD9", fontSize: 16 }}>Cancel</Text>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity onPress={handleFilterPress}>
+              <TouchableOpacity onPress={() => setShow(true)}>
                 <IconButton
                   icon="filter-variant"
                   iconColor="#11B741"
@@ -251,9 +253,22 @@ const SearchBar = () => {
           </View>
           <StatusBar style="dark" backgroundColor="green" />
       </SafeAreaView>
+      <BottomSheetSearchFilter
+          show={show}
+          onDismiss={() => {
+            setShow(false);
+          }}
+          enableBackdropDismiss
+        >
+          <View style={{ paddingLeft: 25, paddingVertical: 25 }}>
+            
+          </View>
+        </BottomSheetSearchFilter>
       </ScrollView>
       
     </TouchableWithoutFeedback>
+    </Provider>
+    
     
   );
 };

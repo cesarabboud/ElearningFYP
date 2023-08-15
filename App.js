@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, } from "react";
 import { StatusBar } from "expo-status-bar";
 import {
   StyleSheet,
@@ -50,6 +50,7 @@ import UploadCourse from "./instructorPages/UploadCourse";
 import InstructorStudents from "./instructorPages/InstructorStudents";
 import EditProfile from "./instructorPages/EditProfile";
 import WebBrowser from "./screens/WebBrowser";
+import SearchResults from './screens/SearchResults'
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -409,6 +410,10 @@ const App = ({ navigation }) => {
         <Stack.Screen
         name="Studentprofile"
         component={StudentProfile}
+        />
+        <Stack.Screen 
+        name="AnimationScreen"
+        component={SearchResults}
         />
       </Stack.Navigator>
     </NavigationContainer>
