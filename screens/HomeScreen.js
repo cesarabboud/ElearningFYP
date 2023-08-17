@@ -17,7 +17,7 @@ import {
 import TestScreen from "./testScreen";
 import { StatusBar } from "react-native";
 import { IconButton } from "react-native-paper";
-const HomeScreen = () => {
+const HomeScreen = ({route}) => {
   // const [currentTime, setCurrentTime] = useState("");
 
   // useEffect(() => {
@@ -62,6 +62,7 @@ const HomeScreen = () => {
       setCurrentIndex(index);
     }
   };*/
+  const {uname} = route.params
   const navigation = useNavigation();
   return (
     <ImageBackground
@@ -128,7 +129,7 @@ const HomeScreen = () => {
               </TouchableOpacity>
             </View>
           </View>
-          <Text style={styles.username}>Welcome, Test</Text>
+          <Text style={styles.username}>Welcome, {uname}</Text>
           <TestScreen />
           <ScrollView
             horizontal
@@ -325,10 +326,11 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: 32,
-    fontWeight: "500",
+    fontWeight: 'bold',
     marginLeft: 25,
     marginBottom: 30,
     marginTop: 20,
+    color:'#fff'
   },
   vidthumbnail: {
     width: 300,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Alert, Keyboard, Pressable } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome";
+
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   Image,
 } from "react-native";
 import { CheckBox } from "react-native-elements";
-import { TextInput } from "react-native-paper";
+import { TextInput,ActivityIndicator } from "react-native-paper";
 import { SvgXml } from "react-native-svg";
 const screenHeight = Dimensions.get("window").height;
 const screenWidth = Dimensions.get("window").width;
@@ -24,8 +24,8 @@ const LoginScreen = ({ navigation }) => {
     setText(newText);
   };
   //const [username,setUserName]=useState("")
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState({value:'',error:''});
+  const [password, setPassword] = useState({value:'',error:''});
   const handleEmail = (email) => {
     setEmail(email);
   };
@@ -33,16 +33,13 @@ const LoginScreen = ({ navigation }) => {
     setPassword(password);
   };
   const [rememberMe, setRememberMe] = useState(false);
-  const [data,setData]=useState([])
+  const [isFilledEmail,setIsFilledEmail] = useState(true)
+  const [isFilledPassword,setIsFilledPassword] = useState(true)
   const handleRememberMe = () => {
     setRememberMe(!rememberMe);
   };
-  const checkEmptyPass =() =>{
-    if(password.length===0){
-      return <Text>This field is required!</Text>
-    }
-    return
-  }
+
+
   const svgLogo =`<svg width="154" height="52" viewBox="0 0 154 52" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <rect width="154" height="52" fill="url(#pattern0)"/>
   <defs>
@@ -54,23 +51,63 @@ const LoginScreen = ({ navigation }) => {
   </svg>`
   const myFct = async () => {
     //Alert.alert('test')
-    
-    await fetch("http://127.0.0.1:8000/api/login", {
+    if(email.value == '' && password.value == ''){
+      setIsFilledEmail(false)
+      setIsFilledPassword(false)
+      // Alert.alert('Alert Title', 'My Alert Msg', [
+      //   {
+      //     text: 'Cancel',
+      //     onPress: () => console.log('Cancel Pressed'),
+      //     style: 'cancel',
+      //   },
+      //   {text: 'OK', onPress: () => console.log('OK Pressed')},
+      // ]);
+      //Alert.alert('2 Empty Fields!')
+      return
+    }
+    else if(email.value == ''){
+      setIsFilledEmail(false)
+      //alert('email is req')
+      return
+    }
+    else if(password.value==''){
+      setIsFilledPassword(false)
+      //alert('pass is req!')
+      console.log('password field is empty!')
+      return
+    }
+    await fetch("http://192.168.0.108:8000/api/login", {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: email,
-        password: password,
+        email: email.value,
+        password: password.value,
       }),
     })
       .then((res) => res.json())
       .then((resData) => {
-        console.log('data')
-        console.log(resData.username);
-        navigation.navigate("TestScreen",{uname:resData.username})
+        
+        if(resData.username){
+          console.log(resData.username);
+          if(resData.role === 2){
+            navigation.navigate('BottomTab', {
+              screen: 'HomeScreen',
+              params: { uname: resData.username },
+            });
+          }
+          else if(resData.role === 3){
+            navigation.navigate("InstructorProfile");
+          }
+        }
+        else{
+          console.log('code:' + resData.code)
+          Alert.alert("Incorrect email or password!")
+        }
+        //navigation.navigate("BottomTab",{})
+        // navigation.navigate("TestScreen",{uname:resData.username})
       });
       
   };
@@ -82,10 +119,12 @@ const LoginScreen = ({ navigation }) => {
       <KeyboardAvoidingView>
         <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
           <View style={styles.content}>
-            <SvgXml xml={svgLogo} />
+            <SvgXml xml={svgLogo}/>
+            {/* <ActivityIndicator size={'large'} color="red"/> */}
             <View style={{ gap: 10 }}>
               <TextInput
-                label="Email"
+                
+                label={/*isFilledEmail ? "Email" : "Email is required"*/ "Email"}
                 mode="outlined"
                 style={{ width: 250, height: 40 }}
                 theme={{
@@ -94,40 +133,55 @@ const LoginScreen = ({ navigation }) => {
                     text: "red",
                     placeholder: "grey",
                     background: "#fff",
-                    onSurfaceVariant: "grey",
+                    //onSurfaceVariant: isFilledEmail === false ? "#ba1629" : "grey",
+                    onSurfaceVariant:"grey",
                     //working
-                    outline: "grey",
+                    outline: isFilledEmail ===false? "#ba1629" : "grey",
                   },
                 }}
                 keyboardType="email-address"
-                onChangeText={handleEmail}
-                value={email}
+                // onChangeText={handleEmail}
+                onChangeText={(text) => {
+                  setIsFilledEmail(true) 
+                  setEmail({ value: text, error: '' })}}
+                value={email.value}
                 //textColor="red"
               />
-              {/* <Text>{email.length}</Text> */}
+              {/* <Text>{isFilledEmail === false ? "Email is required" : undefined}</Text> */}
+              {!isFilledEmail ? (
+        <Text style={{color:"#ba1629"}}>Email is required</Text>
+      ) : null}
               <View style={{ gap: 5 }}>
                 <TextInput
                   secureTextEntry={true}
                   label="Password"
                   mode="outlined"
+                  
                   style={{ width: 250, height: 40 }}
-                  value={password}
+                  value={password.value}
+                  
                   theme={{
                     colors: {
                       primary: "#03ba55",
-                      text: "red",
-                      placeholder: "grey",
+                      text: "green",
                       background: "#fff",
                       onSurfaceVariant: "grey",
                       //working
-                      outline: "grey",
+                      outline: isFilledPassword === false ? "#ba1629" : "grey",
                     },
                   }}
+                  
                   //textColor="red"
-                  onChangeText={handlePassword}
+                  // onChangeText={handlePassword}
+                  onChangeText={(text) =>{ 
+                  setIsFilledPassword(true)
+                  setPassword({ value: text, error: '' })}}
                 />
                 {/*{password === '' ? <Text>This field is required</Text> : <></>}*/}
-
+                {/* <Text>{password.value.length}</Text> */}
+                {!isFilledPassword ? (
+        <Text style={{color:"#ba1629"}}>Password is required</Text>
+      ) : null}
                 <View
                   style={{
                     flexDirection: "row",
@@ -141,11 +195,12 @@ const LoginScreen = ({ navigation }) => {
                     checked={rememberMe}
                     onPress={handleRememberMe}
                     checkedColor="#03ba55"
+                    
                     size={20}
-                    containerStyle={{ borderWidth: 0, margin: 0, padding: 0 }}
+                    containerStyle={{ borderWidth: 0, margin: 0, padding: 0,backgroundColor:"#fff" }}
                     textStyle={{ borderWidth: 0, margin: 0, padding: 0 }}
                   />
-                  <TouchableOpacity onPress={()=>navigation.navigate("AnimationScreen")}>
+                  <TouchableOpacity onPress={()=>navigation.navigate("AdminTab")}>
                     <Text>Forgot password?</Text>
                   </TouchableOpacity>
                   
@@ -207,7 +262,7 @@ const styles = StyleSheet.create({
   content: {
     backgroundColor: "white",
     borderRadius: 10,
-    height: screenHeight - 300,
+    height: screenHeight - 280,
     width: screenWidth - 70,
     justifyContent: "center",
     alignItems: "center",

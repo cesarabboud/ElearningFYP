@@ -9,7 +9,6 @@ import {
   Text,
   View,
   TouchableOpacity,
-  
   Image,
   SafeAreaView,
   Dimensions,
@@ -17,26 +16,51 @@ import {
   Alert,
   
 } from "react-native";
-
 import { IconButton, Provider } from "react-native-paper";
 import BottomSheet from "./BottomSheet";
 import { useNavigation } from "@react-navigation/native";
 import * as WebBrowser from 'expo-web-browser';
-import Icon from "react-native-vector-icons/Octicons";
-import { Octicons } from "@expo/vector-icons";
 import { SvgXml } from "react-native-svg";
-
+import { readAsStringAsync } from "expo-file-system";
+import { StackActions } from "@react-navigation/native";
 const ScreenWidth = Dimensions.get("window").width;
 const  StudentProfile = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [show, setShow] = useState(false);
   const navigation = useNavigation();
   const [result, setResult] = useState(null);
+
+
+  // const getLoggedInUserDetails = async () =>{
+  //   const response = await fetch("http://192.168.0.108/api/")
+  // }
+
+  // React.useEffect(()=>{
+  //   getLoggedInUserDetails()
+  // },[])
+
+
   const handlePressButtonAsync = async () => {
     //const modifiedLink = `http://${link}`;
     let result = await WebBrowser.openBrowserAsync('http://google.com.lb');
     setResult(result);
   };
+
+  const handleLogout = async () =>{
+    try{
+      const response = await fetch('http://192.168.0.108:8000/api/logout',{
+        method: 'POST',
+      })
+      const resData = await response.json()
+      console.log(resData.message)
+      navigation.dispatch(StackActions.replace("LoginScreen"))
+    }
+    catch(err){
+      console.log(err)
+    }
+    
+  }
+
   const whitelogo =`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="78" height="26" viewBox="0 0 78 26" fill="none">
   <rect width="78" height="26" fill="url(#pattern0)"/>
   <defs>
@@ -50,7 +74,6 @@ const  StudentProfile = () => {
     <Provider>
       <View style={styles.container}>
       <StatusBar style="light" />
-        {/* <Button onPress={() => setShow(true)} title="Show Bottom Sheet" /> */}
         <View
           style={{
             flexDirection: "row",
@@ -64,7 +87,6 @@ const  StudentProfile = () => {
           <SvgXml xml={whitelogo} height={24} />
           <TouchableOpacity onPress={() => setShow(true)}>
             <IconButton icon="menu" iconColor="white" />
-            {/* <Octicons name="three-bars" color="white" size={24}/> */}
           </TouchableOpacity>
         </View>
         <View
@@ -171,6 +193,7 @@ const  StudentProfile = () => {
           </TouchableOpacity>
         </View>
         <TouchableOpacity
+        onPress={handleLogout}
           style={{
             backgroundColor: "#11B741",
             alignSelf: "center",

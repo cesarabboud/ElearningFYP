@@ -31,7 +31,7 @@ let json_data = [
   { id: 1, name: "John Doe", dob: new Date(1970, 1, 1) },
   { id: 2, name: "Jane Doe", dob: new Date(1969, 2, 3) },
   { id: 3, name: "Cesar Ab", dob: new Date(2002, 5, 7) },
-];
+]
 
 const StudentsList = () => {
   const generateShareableExcel = async () => {

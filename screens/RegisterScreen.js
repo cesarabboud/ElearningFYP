@@ -33,36 +33,44 @@ const RegisterScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const handleUsername = (username) => {
+    setIsFilleduname(true)
     setUsername(username);
   };
   const handleEmail = (email) => {
+    setIsFilledEmail(true)
     setEmail(email);
   };
   const handlePassword = (password) => {
+    setIsFilledPassword(true)
     setPassword(password);
   };
-  const myFct = async () => {
-    // try {
-    //   const response = await fetch('http://127.0.0.1:8000/api/register', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Accept': 'application/json',
-    //       'Content-Type': 'application/json'
-    //     },
-    //     body: JSON.stringify({
-    //       name: username,
-    //       email: email,
-    //       password: password
-    //     })
-    //   });
-    //   const resData = await response.json();
-    //   console.log(resData);
-    //   alert('testing')
-    //   navigation.navigate("OnBoarding")
-    // } catch (error) {
-    //   console.error(error);
-    // }
-    navigation.navigate("OnBoarding")
+
+  const [isFilleduname,setIsFilleduname] = useState(true)
+  const [isFilledEmail,setIsFilledEmail] = useState(true)
+  const [isFilledPassword,setIsFilledPassword] = useState(true)
+
+  const myFct = () => {
+
+    if(username=== '' && email === '' && password === ''){
+      // alert('check your input fields')
+      setIsFilledEmail(false)
+      setIsFilledPassword(false)
+      setIsFilleduname(false)
+      return
+    }
+    if(username === ''){
+      setIsFilleduname(false)
+      return
+    }
+    if(email === ''){
+      setIsFilledEmail(false)
+      return
+    }
+    if(password===''){
+      setIsFilledPassword(false)
+      return
+    }
+      navigation.navigate("OnBoarding",{ uname:username,email:email,pword:password   })
   }
   return (
     <ImageBackground
@@ -76,6 +84,7 @@ const RegisterScreen = ({ navigation }) => {
           <View style={styles.content}>
             <SvgXml xml={svgLogo}/>
             <View style={{ gap: 15 }}>
+              <View style={{gap:5}}>
               <TextInput
                 label="Username"
                 mode="outlined"
@@ -88,13 +97,19 @@ const RegisterScreen = ({ navigation }) => {
                     background: "#fff",
                     onSurfaceVariant: "grey",
                     //working
-                    outline: "grey",
+                    outline: isFilleduname ===false? "#ba1629" : "grey",
                   },
                 }}
                 value={username}
                 onChangeText={handleUsername}
                 //textColor="red"
               />
+              {!isFilleduname ? (
+        <Text style={{color:"#ba1629"}}>Username is required</Text>
+      ) : null}
+              </View>
+              
+              <View style={{gap:5}}>
               <TextInput
                 label="Email"
                 mode="outlined"
@@ -107,7 +122,7 @@ const RegisterScreen = ({ navigation }) => {
                     background: "#fff",
                     onSurfaceVariant: "grey",
                     //working
-                    outline: "grey",
+                    outline: isFilledEmail ===false? "#ba1629" : "grey",
                   },
                 }}
                 keyboardType="email-address"
@@ -115,6 +130,11 @@ const RegisterScreen = ({ navigation }) => {
                 value={email}
                 onChangeText={handleEmail}
               />
+              {!isFilledEmail ? (
+        <Text style={{color:"#ba1629"}}>Email is required</Text>
+      ) : null}
+              </View>
+              <View style={{gap:5}}>
               <TextInput
                 secureTextEntry={true}
                 label="Password"
@@ -128,7 +148,7 @@ const RegisterScreen = ({ navigation }) => {
                     background: "#fff",
                     onSurfaceVariant: "grey",
                     //working
-                    outline: "grey",
+                    outline: isFilledPassword === false ? "#ba1629" : "grey",
                   },
                   
                 }}
@@ -136,6 +156,11 @@ const RegisterScreen = ({ navigation }) => {
                 onChangeText={handlePassword}
                 //textColor="red"
               />
+              {!isFilledPassword ? (
+        <Text style={{color:"#ba1629"}}>Password is required</Text>
+      ) : null}
+              </View>
+              
             </View>
             <View style={{ gap: 10 }}>
               <TouchableOpacity
@@ -185,7 +210,7 @@ const styles = StyleSheet.create({
   content: {
     backgroundColor: "white",
     borderRadius: 10,
-    height: screenHeight - 300,
+    height: screenHeight - 250,
     width: screenWidth - 70,
     justifyContent: "center",
     alignItems: "center",

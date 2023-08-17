@@ -10,17 +10,41 @@ import {
   Image,
   TouchableWithoutFeedback,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { IconButton, DataTable, Provider } from "react-native-paper";
 import Modal from "react-native-modal";
 import Constants from "expo-constants";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation,useIsFocused } from "@react-navigation/native";
 
 const StudentsList = () => {
   const [searchText, setSearchText] = useState("");
   const [showCancelButton, setShowCancelButton] = useState(false);
   const [showSortModal, setShowSortModal] = useState(false);
+  const [studentsList,setStudentList] = useState([])
+  const isFocused = useIsFocused()
 
+  const getAllStudents = async () => {
+    try{
+      const response = await fetch('http://192.168.0.108:8000/api/getAllStudents',{
+        method:'GET',
+      })
+      const resData = await response.json()
+      // console.log(resData)
+      setStudentList(resData.students)
+      alert(resData.studentscount)
+    }
+    //   console.log(resData);
+    //   alert('testing')
+    catch(err){
+      console.log(err)
+    }
+  }
+
+  useEffect(()=>{
+    if(isFocused){
+      getAllStudents()
+    }
+  },[isFocused])
   const handleSearchTextChange = (text) => {
     setSearchText(text);
     setShowCancelButton(text.length > 0);
@@ -35,44 +59,7 @@ const StudentsList = () => {
   const handleFilterPress = () => {
     setShowSortModal(true);
   };
-  const [items] = React.useState([
-    {
-      key: 1,
-      name: "Cupcake",
-      calories: 356,
-      fat: 16,
-    },
-    {
-      key: 2,
-      name: "Eclair",
-      calories: 262,
-      fat: 16,
-    },
-    {
-      key: 3,
-      name: "Frozen yogurt",
-      calories: 159,
-      fat: 6,
-    },
-    {
-      key: 4,
-      name: "Gingerbread",
-      calories: 305,
-      fat: 3.7,
-    },
-    {
-      key: 5,
-      name: "Gingerbread",
-      calories: 305,
-      fat: 3.7,
-    },
-    {
-      key: 6,
-      name: "Gingerbread",
-      calories: 305,
-      fat: 3.7,
-    },
-  ]);
+  
   const handleSortOptionSelect = (option) => {
     // Handle sort option selection here
     console.log("Selected sort option:", option);
@@ -87,13 +74,13 @@ const StudentsList = () => {
 
   const MyTable = () => {
     const [page, setPage] = React.useState(0);
-    const [numberOfItemsPerPageList] = React.useState([1,2,5,items.length]);
+    const [numberOfItemsPerPageList] = React.useState([1,2,studentsList.length]);
     const [itemsPerPage, onItemsPerPageChange] = React.useState(
       numberOfItemsPerPageList[1]
     );
 
     const from = page * itemsPerPage;
-    const to = Math.min((page + 1) * itemsPerPage, items.length);
+    const to = Math.min((page + 1) * itemsPerPage, studentsList.length);
 
     React.useEffect(() => {
       setPage(0);
@@ -103,25 +90,26 @@ const StudentsList = () => {
       <DataTable>
         <DataTable.Header>
           <DataTable.Title textStyle={{}}>#</DataTable.Title>
-          <DataTable.Title>Image</DataTable.Title>
+          <DataTable.Title><Text>Image</Text></DataTable.Title>
           <DataTable.Title>Full Name</DataTable.Title>
           <DataTable.Title>Email</DataTable.Title>
           <DataTable.Title></DataTable.Title>
         </DataTable.Header>
 
-        {items.slice(from, to).map((item) => (
+        {studentsList.slice(from, to).map((item) => (
           <DataTable.Row  key={item.key}>
-            <DataTable.Cell onPress={()=>navigation.navigate("StudentDetails")}>{item.key}</DataTable.Cell>
+            <DataTable.Cell onPress={()=>navigation.navigate("StudentDetails")}>{item.id}</DataTable.Cell>
             <DataTable.Cell>
               <View style={{ borderRadius: "100", overflow: "hidden",justifyContent:'center',alignItems:'center' }}>
                 <Image
-                  source={require("../images/profilepic.jpg")}
-                  style={{ width: 35, height: 35 }}
+                  source={{uri:item.profilepicture}}
+                  resizeMode='stretch'
+                  style={{ width: 35, height: 35 ,}}
                 />
               </View>
             </DataTable.Cell>
-            <DataTable.Cell>Cesar Ab</DataTable.Cell>
-            <DataTable.Cell>cesar@gmail.com</DataTable.Cell>
+            <DataTable.Cell>{item.name}</DataTable.Cell>
+            <DataTable.Cell>{item.email}</DataTable.Cell>
             <DataTable.Cell style={{alignItems:'center',justifyContent:'center'}}>
               <IconButton style={{margin:-3}} icon={"close"} iconColor="red" />
             </DataTable.Cell>
@@ -131,13 +119,14 @@ const StudentsList = () => {
         <DataTable.Pagination
           
           page={page}
-          numberOfPages={Math.ceil(items.length / itemsPerPage)}
+          numberOfPages={Math.ceil(studentsList.length / itemsPerPage)}
           onPageChange={(page) => setPage(page)}
-          label={`${from + 1}-${to} of ${items.length}`}
+          label={`${from + 1}-${to} of ${studentsList.length}`}
           numberOfItemsPerPageList={numberOfItemsPerPageList}
           numberOfItemsPerPage={itemsPerPage}
           onItemsPerPageChange={onItemsPerPageChange}
           showFastPaginationControls
+          
           selectPageDropdownLabel={"Rows per page"}
         />
       </DataTable>
@@ -166,7 +155,7 @@ const StudentsList = () => {
               fontWeight: "500",
             }}
           >
-            Students({items.length})
+            Students({studentsList.length})
           </Text>
           <View
             style={{
