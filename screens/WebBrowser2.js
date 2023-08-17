@@ -7,7 +7,7 @@ const MyWebComponent = () => {
     const ActivityIndicatorComponent = () =>{
         return(
             <View style={styles.activityIndicatorStyle}>
-                <ActivityIndicator color={'grey'} size={'large'} />
+                <ActivityIndicator color="#000" size={'large'} />
             </View>
         )
     }
@@ -17,8 +17,7 @@ const MyWebComponent = () => {
     <SafeAreaView style={styles.container}>
     <WebView
       
-      source={{ uri: 'https://google.com' }}
-      
+      source={{ uri: 'https://eloquentjavascript.net/Eloquent_JavaScript_small.pdf' }}
         //minimumFontSize={50}
         showsVerticalScrollIndicator={false}
         pagingEnabled={false}
