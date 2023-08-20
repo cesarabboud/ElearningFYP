@@ -24,22 +24,38 @@ import { SvgXml } from "react-native-svg";
 import { readAsStringAsync } from "expo-file-system";
 import { StackActions } from "@react-navigation/native";
 const ScreenWidth = Dimensions.get("window").width;
-const  StudentProfile = () => {
+const  StudentProfile = ({route}) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [show, setShow] = useState(false);
   const navigation = useNavigation();
   const [result, setResult] = useState(null);
-
-
-  // const getLoggedInUserDetails = async () =>{
-  //   const response = await fetch("http://192.168.0.108/api/")
-  // }
+  const [user,setUser] = useState(null)
+  const {usertoken} = route.params
+  const getLoggedInUserDetails = async () =>{
+    try{
+      const response = await fetch("http://192.168.0.108:8000/api/getLoggedInUserDetails",{
+        method:"GET",
+        headers:{
+          "Accept": 'application/json',
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${usertoken}`,
+        },
+      })
+      const resData = await response.json()
+      console.log(resData.msg)
+    }
+    catch(err){
+      console.log('error:',err)
+    }
+  }
 
   // React.useEffect(()=>{
   //   getLoggedInUserDetails()
   // },[])
 
-
+  React.useEffect(()=>{
+    getLoggedInUserDetails()
+  },[])
   const handlePressButtonAsync = async () => {
     //const modifiedLink = `http://${link}`;
     let result = await WebBrowser.openBrowserAsync('http://google.com.lb');

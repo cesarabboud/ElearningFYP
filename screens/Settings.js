@@ -120,7 +120,7 @@ const Settings = () => {
             <TouchableOpacity
               style={{
                 marginRight: 20,
-                backgroundColor: "#11b741",
+                backgroundColor: "#ba1629",
                 padding: 8,
                 borderRadius: 5,
               }}

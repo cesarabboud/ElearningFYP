@@ -15,7 +15,7 @@ import {
   Alert,
 } from "react-native";
 import { Checkbox } from "react-native-elements";
-import { TextInput } from "react-native-paper";
+import { TextInput,Button } from "react-native-paper";
 import { SvgXml } from "react-native-svg";
 const screenHeight = Dimensions.get("window").height;
 const screenWidth = Dimensions.get("window").width;

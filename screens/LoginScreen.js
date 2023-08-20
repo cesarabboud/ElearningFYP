@@ -13,7 +13,7 @@ import {
   Image,
 } from "react-native";
 import { CheckBox } from "react-native-elements";
-import { TextInput,ActivityIndicator } from "react-native-paper";
+import { TextInput,ActivityIndicator, Button } from "react-native-paper";
 import { SvgXml } from "react-native-svg";
 const screenHeight = Dimensions.get("window").height;
 const screenWidth = Dimensions.get("window").width;
@@ -31,6 +31,7 @@ const LoginScreen = ({ navigation }) => {
   };
   const handlePassword = (password) => {
     setPassword(password);
+    
   };
   const [rememberMe, setRememberMe] = useState(false);
   const [isFilledEmail,setIsFilledEmail] = useState(true)
@@ -81,6 +82,7 @@ const LoginScreen = ({ navigation }) => {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        
       },
       body: JSON.stringify({
         email: email.value,
@@ -92,10 +94,11 @@ const LoginScreen = ({ navigation }) => {
         
         if(resData.username){
           console.log(resData.username);
+          console.log(resData.token)
           if(resData.role === 2){
             navigation.navigate('BottomTab', {
               screen: 'HomeScreen',
-              params: { uname: resData.username },
+              params: { uname: resData.username ,usertoken:resData.token },
             });
           }
           else if(resData.role === 3){
@@ -200,7 +203,7 @@ const LoginScreen = ({ navigation }) => {
                     containerStyle={{ borderWidth: 0, margin: 0, padding: 0,backgroundColor:"#fff" }}
                     textStyle={{ borderWidth: 0, margin: 0, padding: 0 }}
                   />
-                  <TouchableOpacity onPress={()=>navigation.navigate("AdminTab")}>
+                  <TouchableOpacity onPress={()=>navigation.navigate("Actions")}>
                     <Text>Forgot password?</Text>
                   </TouchableOpacity>
                   
@@ -231,6 +234,7 @@ const LoginScreen = ({ navigation }) => {
                 Log in
               </Text>
             </TouchableOpacity>
+            {/* <Button onPress={myFct} mode='elevated' buttonColor="#03ba55" textColor="#fff" style={{width:'80%',borderRadius:5,paddingVertical:0}} >Log in</Button> */}
             <View style={{ flexDirection: "row" }}>
               <Text>Don't have an account? </Text>
               <TouchableOpacity
@@ -283,3 +287,4 @@ const styles = StyleSheet.create({
     
   },
 });
+

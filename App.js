@@ -52,6 +52,7 @@ import InstructorStudents from "./instructorPages/InstructorStudents";
 import EditProfile from "./instructorPages/EditProfile";
 import WebBrowser from "./screens/WebBrowser";
 import SearchResults from './screens/SearchResults'
+import ActionsWithPDF from "./screens/ActionsWithPDF";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -419,6 +420,10 @@ const App = ({ navigation }) => {
         <Stack.Screen
         name="MyWebComponent"
         component={MyWebComponent}
+        />
+        <Stack.Screen 
+        name="Actions"
+        component={ActionsWithPDF}
         />
       </Stack.Navigator>
     </NavigationContainer>

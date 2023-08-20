@@ -62,7 +62,7 @@ const HomeScreen = ({route}) => {
       setCurrentIndex(index);
     }
   };*/
-  const {uname} = route.params
+  const {uname,usertoken} = route.params
   const navigation = useNavigation();
   return (
     <ImageBackground
@@ -123,7 +123,7 @@ const HomeScreen = ({route}) => {
             >
               {/* <Text style={{ fontWeight: "500" }}>{currentTime}</Text> */}
               <TouchableOpacity
-                onPress={() => navigation.navigate("Studentprofile")}
+                onPress={() => navigation.navigate("Studentprofile",{usertoken:usertoken})}
               >
                 <SvgXml xml={profileSvg} style={{ marginRight: 15 }} />
               </TouchableOpacity>
