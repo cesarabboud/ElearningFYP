@@ -88,6 +88,7 @@ const RegisterScreen = ({ navigation }) => {
               <TextInput
                 label="Username"
                 mode="outlined"
+                autoCapitalize="none"
                 style={{ width: 250, height: 40 }}
                 theme={{
                   colors: {
@@ -113,6 +114,7 @@ const RegisterScreen = ({ navigation }) => {
               <TextInput
                 label="Email"
                 mode="outlined"
+                autoCapitalize="none"
                 style={{ width: 250, height: 40 }}
                 theme={{
                   colors: {
@@ -215,6 +217,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 20,
+    paddingVertical:20
   },
   registerbtn: {
     backgroundColor: "#03ba55",

@@ -11,17 +11,111 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import React, { useState,useEffect } from "react";
-import { IconButton, DataTable, Provider } from "react-native-paper";
+import { IconButton, DataTable, Provider, Button } from "react-native-paper";
 import Modal from "react-native-modal";
 import Constants from "expo-constants";
 import { useNavigation,useIsFocused } from "@react-navigation/native";
-
+import * as Sharing from "expo-sharing";
+import { Buffer as NodeBuffer } from "buffer";
+import * as FileSystem from "expo-file-system";
+import ExcelJS from "exceljs";
 const StudentsList = () => {
   const [searchText, setSearchText] = useState("");
   const [showCancelButton, setShowCancelButton] = useState(false);
   const [showSortModal, setShowSortModal] = useState(false);
   const [studentsList,setStudentList] = useState([])
   const isFocused = useIsFocused()
+
+
+
+
+  const generateShareableExcel = async () => {
+    const now = new Date();
+    const fileName = `${now.getTime()}.xlsx`;
+    const fileUri = FileSystem.cacheDirectory + fileName;
+    return new Promise((resolve, reject) => {
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = "Me";
+      workbook.created = now;
+      workbook.modified = now;
+      // Add a sheet to work on
+      const worksheet = workbook.addWorksheet("My Sheet", {});
+      // Just some columns as used on ExcelJS Readme
+
+      worksheet.columns = [
+        { header: "Id", key: "id", width: 5 },
+        { header: "Name", key: "name", width: 32 },
+        { header: "Email", key: "email", width: 30 },
+      ];
+      // Add some test dat
+      studentsList.forEach((i) => {
+        worksheet.addRow({
+          id: i.id,
+          name: i.name,
+          email: i.email,
+        });
+      });
+      // Test styling
+
+      // Style first row
+      worksheet.getRow(1).fill = {
+        type:"pattern",
+        pattern:"solid",
+        fgColor: {argb :"FFFF01",}
+      }
+      worksheet.getRow(1).font = {
+        name: "Comic Sans MS",
+        family: 4,
+        size: 12,
+        underline: "double",
+        bold:true,
+        
+      };
+      
+      // Style second column
+      worksheet.eachRow((row, rowNumber) => {
+        row.getCell(2).font = {
+          name: "Arial Black",
+          //  color: { argb: 'FF00FF00' },
+          family: 2,
+          size: 14,
+          bold: true,
+        };
+      });
+
+      // Write to file
+      workbook.xlsx.writeBuffer().then((buffer) => {
+        // Do this to use base64 encoding
+        const nodeBuffer = NodeBuffer.from(buffer);
+        const bufferStr = nodeBuffer.toString("base64");
+        FileSystem.writeAsStringAsync(fileUri, bufferStr, {
+          encoding: FileSystem.EncodingType.Base64,
+        }).then(() => {
+          resolve(fileUri);
+        });
+      });
+    });
+  };
+
+  //-------
+
+  const ShareExcel = async () => {
+    const shareableExcelUri = await generateShareableExcel();
+    Sharing.shareAsync(shareableExcelUri, {
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // Android
+      dialogTitle: "Your dialog title here", // Android and Web
+      UTI: "com.microsoft.excel.xlsx", // iOS
+    })
+      .catch((error) => {
+        console.error("Error", error);
+      })
+      .then(() => {
+        console.log("Return from sharing dialog");
+      });
+  };
+
+
 
   const getAllStudents = async () => {
     try{
@@ -74,7 +168,7 @@ const StudentsList = () => {
 
   const MyTable = () => {
     const [page, setPage] = React.useState(0);
-    const [numberOfItemsPerPageList] = React.useState([1,2,studentsList.length]);
+    const [numberOfItemsPerPageList] = React.useState([1,2,5,studentsList.length]);
     const [itemsPerPage, onItemsPerPageChange] = React.useState(
       numberOfItemsPerPageList[1]
     );
@@ -97,7 +191,7 @@ const StudentsList = () => {
         </DataTable.Header>
 
         {studentsList.slice(from, to).map((item) => (
-          <DataTable.Row  key={item.key}>
+          <DataTable.Row  key={item.id}>
             <DataTable.Cell onPress={()=>navigation.navigate("StudentDetails")}>{item.id}</DataTable.Cell>
             <DataTable.Cell>
               <View style={{ borderRadius: "100", overflow: "hidden",justifyContent:'center',alignItems:'center' }}>
@@ -162,7 +256,7 @@ const StudentsList = () => {
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-around",
-              height: 70,
+              height: 45,
               borderRadius: 10,
               backgroundColor: "white",
               marginHorizontal: 15,
@@ -233,6 +327,7 @@ const StudentsList = () => {
         </View>
         {/* */}
         <MyTable />
+        <Button mode='elevated' style={{width:'25%',alignSelf:'flex-end',borderRadius:5,marginRight:10}} buttonColor="#6366f1" textColor="#fff" icon={'share-variant'} onPress={ShareExcel}>Export</Button>
       </View>
         
       </TouchableWithoutFeedback>

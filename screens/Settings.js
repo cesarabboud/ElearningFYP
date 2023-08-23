@@ -10,6 +10,10 @@ import {
   useColorScheme
 } from "react-native";
 import React, { useEffect, useState } from "react";
+import { Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Children } from "react";
+import { useNavigation,StackActions } from "@react-navigation/native";
 
 const Settings = () => {
   const [isEnabled, setIsEnabled] = useState(false);
@@ -22,6 +26,66 @@ const Settings = () => {
   const toggleSwitchNotif = () => {
     setIsEnabledNotif((previousState) => !previousState);
   };
+
+  const navigation = useNavigation()
+
+  const clearAll = async () => {
+    try {
+      await AsyncStorage.clear()
+    } catch(e) {
+      // clear error
+    }
+  
+    console.log('Done.')
+  }
+
+  const DeleteAcc = () =>{
+    Alert.alert(
+      'Delete Account',
+  'Are you sure you want to delete your account ? This action cannot be undone.',
+      [
+        {
+          text:'Cancel',
+          style:'cancel',
+          onPress:()=>{
+            console.log('Cancel Pressed')
+          }
+        },
+        {
+          text:'Delete',
+          style:'destructive',
+          onPress: async () => {
+            const token = await AsyncStorage.getItem('token')
+            if(token!==null){
+              const response = await fetch('http://192.168.0.108:8000/api/deleteAcc',{
+                method:"GET",
+                headers:{
+                  "Accept": 'application/json',
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${token}`,
+                },
+              })
+              const resData = response.json()
+              console.log(resData.message)
+              try{
+                clearAll()
+                console.log('test')
+              }
+              catch(err){
+                console.log(err)
+              }
+              token2 = await AsyncStorage.getItem('token')
+              if(token2 === null){
+                console.log('async storage cleared')
+              }
+              navigation.dispatch(StackActions.replace("LoginScreen"))
+            }
+          }
+        }
+      ]
+    )
+  }
+
   const colorScheme = useColorScheme()
   useEffect(()=>{
     console.log(colorScheme)
@@ -118,9 +182,10 @@ const Settings = () => {
           >
             <Text style={styles.sub}>Delete Account</Text>
             <TouchableOpacity
+            onPress={DeleteAcc}
               style={{
                 marginRight: 20,
-                backgroundColor: "#ba1629",
+                backgroundColor: "#f40204",
                 padding: 8,
                 borderRadius: 5,
               }}

@@ -24,25 +24,30 @@ import { SvgXml } from "react-native-svg";
 import { readAsStringAsync } from "expo-file-system";
 import { StackActions } from "@react-navigation/native";
 const ScreenWidth = Dimensions.get("window").width;
-const  StudentProfile = ({route}) => {
+import AsyncStorage from '@react-native-async-storage/async-storage'
+const  StudentProfile = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [show, setShow] = useState(false);
   const navigation = useNavigation();
   const [result, setResult] = useState(null);
-  const [user,setUser] = useState(null)
-  const {usertoken} = route.params
+  const [user,setUser] = useState({})
+  
   const getLoggedInUserDetails = async () =>{
+    const val = await AsyncStorage.getItem('token')
     try{
       const response = await fetch("http://192.168.0.108:8000/api/getLoggedInUserDetails",{
         method:"GET",
         headers:{
           "Accept": 'application/json',
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${usertoken}`,
+          "Authorization": `Bearer ${val}`,
         },
       })
       const resData = await response.json()
-      console.log(resData.msg)
+      
+      console.log(resData.user)
+      setUser(resData.user)
+      // console.log(user)
     }
     catch(err){
       console.log('error:',err)
@@ -54,7 +59,8 @@ const  StudentProfile = ({route}) => {
   // },[])
 
   React.useEffect(()=>{
-    getLoggedInUserDetails()
+    
+    getLoggedInUserDetails();
   },[])
   const handlePressButtonAsync = async () => {
     //const modifiedLink = `http://${link}`;
@@ -64,8 +70,14 @@ const  StudentProfile = ({route}) => {
 
   const handleLogout = async () =>{
     try{
+      const val = await AsyncStorage.getItem('token')
       const response = await fetch('http://192.168.0.108:8000/api/logout',{
         method: 'POST',
+        headers:{
+          "Accept": 'application/json',
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${val}`,
+        }
       })
       const resData = await response.json()
       console.log(resData.message)
@@ -114,14 +126,14 @@ const  StudentProfile = ({route}) => {
         >
           <View style={{ borderRadius: "100", overflow: "hidden" }}>
             <Image
-            source={{uri: 'https://www.transparentpng.com/download/user/gray-user-profile-icon-png-fP8Q1P.png'}}
+            source={{uri: user.profilepicture}}
                //source={require("../images/profilepic.jpg")}
               style={{ width: 100, height: 100,backgroundColor:'#ccc' }}
               resizeMode='cover'
             />
           </View>
           <Text style={{ color: "#fff", fontSize: 18, fontWeight: "600" }}>
-            Cesar Abboud
+            {user.name}
           </Text>
           <TouchableOpacity>
             <Text

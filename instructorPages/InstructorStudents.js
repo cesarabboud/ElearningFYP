@@ -11,7 +11,7 @@ import {
   Button,
   TouchableWithoutFeedback,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import {
   IconButton,
   DataTable,
@@ -26,14 +26,34 @@ import * as Sharing from "expo-sharing";
 import { Buffer as NodeBuffer } from "buffer";
 import * as FileSystem from "expo-file-system";
 import ExcelJS from "exceljs";
-
-let json_data = [
-  { id: 1, name: "John Doe", dob: new Date(1970, 1, 1) },
-  { id: 2, name: "Jane Doe", dob: new Date(1969, 2, 3) },
-  { id: 3, name: "Cesar Ab", dob: new Date(2002, 5, 7) },
-]
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const StudentsList = () => {
+
+  const getmyStd = async () =>{
+    const val = await AsyncStorage.getItem('token')
+    try{
+      const response = await fetch('http://192.168.0.108:8000/api/getInstructorProfileInfo',{
+        method: 'GET',
+        headers:{
+          "Accept": 'application/json',
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${val}`,
+        }
+      })
+      const resData = await response.json()
+      console.log(resData.mystudents)
+      setmyStudents(resData.mystudents)
+      //console.log(myStudents.length)
+    }
+    catch(err){
+      console.log(err)
+    }
+  }
+  const [myStudents,setmyStudents] = useState([])
+  useEffect(() =>{
+    getmyStd()
+  },[])
   const generateShareableExcel = async () => {
     const now = new Date();
     const fileName = `${now.getTime()}.xlsx`;
@@ -50,14 +70,14 @@ const StudentsList = () => {
       worksheet.columns = [
         { header: "Id", key: "id", width: 10 },
         { header: "Name", key: "name", width: 32 },
-        { header: "D.O.B.", key: "dob", width: 10 },
+        { header: "Email", key: "email", width: 10 },
       ];
       // Add some test dat
-      json_data.forEach((i) => {
+      myStudents.forEach((i) => {
         worksheet.addRow({
           id: i.id,
           name: i.name,
-          dob: i.dob,
+          email: i.email,
         });
       });
       // Test styling
@@ -111,9 +131,6 @@ const StudentsList = () => {
       .then(() => {
         console.log("Return from sharing dialog");
       });
-    for (let i of json_data) {
-      console.log(i.name);
-    }
   };
 
   const [searchText, setSearchText] = useState("");
@@ -122,6 +139,7 @@ const StudentsList = () => {
 
   const handleSearchTextChange = (text) => {
     setSearchText(text);
+    
     setShowCancelButton(text.length > 0);
   };
 
@@ -134,11 +152,6 @@ const StudentsList = () => {
   const handleFilterPress = () => {
     setShowSortModal(true);
   };
-  const [items] = React.useState([
-    { id: 1, name: "John Doe", dob: new Date(1970, 1, 1) },
-    { id: 2, name: "Jane Doe", dob: new Date(1969, 2, 3) },
-    { id: 3, name: "Cesar Ab", dob: new Date(2002, 5, 7) },
-  ]);
   const handleSortOptionSelect = (option) => {
     // Handle sort option selection here
     console.log("Selected sort option:", option);
@@ -150,30 +163,32 @@ const StudentsList = () => {
   };
 
   const MyTable = () => {
-    const [page, setPage] = React.useState(0);
-    const [numberOfItemsPerPageList] = React.useState([1, 2, 5, items.length]);
+    if(myStudents.length > 0){
+      const [page, setPage] = React.useState(0);
+    const [numberOfItemsPerPageList] = React.useState([1, 2, 5, myStudents.length]);
     const [itemsPerPage, onItemsPerPageChange] = React.useState(
       numberOfItemsPerPageList[1]
     );
 
     const from = page * itemsPerPage;
-    const to = Math.min((page + 1) * itemsPerPage, items.length);
+    const to = Math.min((page + 1) * itemsPerPage, myStudents.length);
 
     React.useEffect(() => {
       setPage(0);
     }, [itemsPerPage]);
     const navigation = useNavigation();
     return (
+    <>
       <DataTable>
         <DataTable.Header>
           <DataTable.Title textStyle={{}}>#</DataTable.Title>
           <DataTable.Title>Image</DataTable.Title>
-          <DataTable.Title>Full Name</DataTable.Title>
-          <DataTable.Title>DOB</DataTable.Title>
+          <DataTable.Title> UserName</DataTable.Title>
+          <DataTable.Title>Email</DataTable.Title>
           <DataTable.Title></DataTable.Title>
         </DataTable.Header>
 
-        {json_data.slice(from, to).map((item) => (
+        {myStudents.slice(from, to).map((item) => (
           <DataTable.Row key={item.key}>
             <DataTable.Cell
               onPress={() => navigation.navigate("StudentDetails")}
@@ -197,8 +212,7 @@ const StudentsList = () => {
             </DataTable.Cell>
             <DataTable.Cell>{item.name}</DataTable.Cell>
             <DataTable.Cell>
-              {item.dob.getDate()}-{item.dob.getMonth()}-
-              {item.dob.getFullYear()}
+              {item.email}
             </DataTable.Cell>
             <DataTable.Cell
               style={{ alignItems: "center", justifyContent: "center" }}
@@ -214,9 +228,9 @@ const StudentsList = () => {
 
         <DataTable.Pagination
           page={page}
-          numberOfPages={Math.ceil(items.length / itemsPerPage)}
+          numberOfPages={Math.ceil(myStudents.length / itemsPerPage)}
           onPageChange={(page) => setPage(page)}
-          label={`${from + 1}-${to} of ${items.length}`}
+          label={`${from + 1}-${to} of ${myStudents.length}`}
           numberOfItemsPerPageList={numberOfItemsPerPageList}
           numberOfItemsPerPage={itemsPerPage}
           onItemsPerPageChange={onItemsPerPageChange}
@@ -224,138 +238,145 @@ const StudentsList = () => {
           selectPageDropdownLabel={"Rows per page"}
         />
       </DataTable>
+      <View
+      style={{ width: "30%", alignSelf: "flex-end", marginRight: 10 }}
+    >
+      <FAB
+        style={{ borderRadius: 10, backgroundColor: "#03ba55" }}
+        color="#000"
+        icon="export"
+        onPress={ShareExcel}
+        label="Export"
+        customSize={40}
+        mode="flat"
+      />
+    </View>
+    </>
     );
+    }
+    return <></>
   };
   const handleScreenPress = () => {
     Keyboard.dismiss();
   };
-  return (
-    <Provider>
-      <TouchableWithoutFeedback onPress={handleScreenPress}>
-        <View style={styles.container}>
-          <View
-            style={{
-              backgroundColor: "#03ba55",
-              borderBottomLeftRadius: 20,
-              borderBottomRightRadius: 20,
-            }}
-          >
-            <Text
-              style={{
-                textAlign: "center",
-                marginTop: 30,
-                fontSize: 20,
-                fontWeight: "500",
-              }}
-            >
-              My Students({items.length})
-            </Text>
+  if(myStudents.length !== 0){
+    return (
+      <Provider>
+        <TouchableWithoutFeedback onPress={handleScreenPress}>
+          <View style={styles.container}>
             <View
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-around",
-                height: 50,
-                borderRadius: 10,
-                backgroundColor: "white",
-                margin: 15,
+                backgroundColor: "#03ba55",
+                borderBottomLeftRadius: 20,
+                borderBottomRightRadius: 20,
               }}
             >
+              <Text
+                style={{
+                  textAlign: "center",
+                  marginTop: 30,
+                  fontSize: 20,
+                  fontWeight: "500",
+                }}
+              >
+                My Students({myStudents.length})
+              </Text>
               <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  width: "75%",
+                  justifyContent: "space-around",
+                  height: 60,
+                  borderRadius: 10,
+                  backgroundColor: "white",
+                  margin: 15,
                 }}
               >
-                <IconButton
-                  icon="magnify"
-                  iconColor="#000"
-                  size={28}
-                  style={{ margin: 0 }}
-                />
-                <TextInput
+                <View
                   style={{
-                    padding: 10,
-                    fontSize: 20,
-                    width: "80%",
-                    fontWeight: "600",
-                    height: 30,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    width: "75%",
                   }}
-                  placeholder="Search"
-                  value={searchText}
-                  onChangeText={handleSearchTextChange}
-                />
-              </View>
-
-              <View style={{}}>
-                {showCancelButton ? (
-                  <TouchableOpacity onPress={handleCancelPress}>
-                    <Text style={{ color: "#008BD9", fontSize: 20 }}>
-                      Cancel
-                    </Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity onPress={handleFilterPress}>
-                    <IconButton
-                      icon="filter-variant"
-                      iconColor="#000"
-                      size={28}
-                      style={{ margin: 0 }}
-                    />
-                  </TouchableOpacity>
-                )}
-              </View>
-              <Modal
-                isVisible={showSortModal}
-                onBackdropPress={handleModalClose}
-                animationIn={"fadeIn"}
-                animationOut={"fadeOut"}
-                backdropColor="rgba(0,0,0,.5)"
-                useNativeDriver={true}
-              >
-                <View style={styles.modalContainer}>
-                  <TouchableOpacity
-                    style={styles.sortOption}
-                    onPress={() => handleSortOptionSelect("A-Z")}
-                  >
-                    <Text>A-Z</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.sortOption}
-                    onPress={() => handleSortOptionSelect("Z-A")}
-                  >
-                    <Text>Z-A</Text>
-                  </TouchableOpacity>
+                >
+                  <IconButton
+                    icon="magnify"
+                    iconColor="#000"
+                    size={28}
+                    style={{ margin: 0 }}
+                  />
+                  <TextInput
+                    style={{
+                      padding: 10,
+                      fontSize: 20,
+                      width: "80%",
+                      fontWeight: "600",
+                      height: 30,
+                    }}
+                    placeholder="Search"
+                    value={searchText}
+                    onChangeText={handleSearchTextChange}
+                  />
                 </View>
-              </Modal>
+  
+                <View style={{}}>
+                  {showCancelButton ? (
+                    <TouchableOpacity onPress={handleCancelPress}>
+                      <Text style={{ color: "#008BD9", fontSize: 20 }}>
+                        Cancel
+                      </Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity onPress={handleFilterPress}>
+                      <IconButton
+                        icon="filter-variant"
+                        iconColor="#000"
+                        size={28}
+                        style={{ margin: 0 }}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
+                <Modal
+                  isVisible={showSortModal}
+                  onBackdropPress={handleModalClose}
+                  animationIn={"fadeIn"}
+                  animationOut={"fadeOut"}
+                  backdropColor="rgba(0,0,0,.5)"
+                  useNativeDriver={true}
+                >
+                  <View style={styles.modalContainer}>
+                    <TouchableOpacity
+                      style={styles.sortOption}
+                      onPress={() => handleSortOptionSelect("A-Z")}
+                    >
+                      <Text>A-Z</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.sortOption}
+                      onPress={() => handleSortOptionSelect("Z-A")}
+                    >
+                      <Text>Z-A</Text>
+                    </TouchableOpacity>
+                  </View>
+                </Modal>
+              </View>
             </View>
+            {/* */}
+  
+            <MyTable />
+            {/* <View style={{width:'40%',alignSelf:'flex-end',marginRight:10}}>
+          <Button icon="share" mode='contained' buttonColor="#03ba55" onPress={() => console.log('Pressed')}>
+      Export Table
+    </Button>
+          </View> */}
+            
           </View>
-          {/* */}
-
-          <MyTable />
-          {/* <View style={{width:'40%',alignSelf:'flex-end',marginRight:10}}>
-        <Button icon="share" mode='contained' buttonColor="#03ba55" onPress={() => console.log('Pressed')}>
-    Export Table
-  </Button>
-        </View> */}
-          <View
-            style={{ width: "30%", alignSelf: "flex-end", marginRight: 10 }}
-          >
-            <FAB
-              style={{ borderRadius: 10, backgroundColor: "#03ba55" }}
-              color="#000"
-              icon="export"
-              onPress={ShareExcel}
-              label="Export"
-              customSize={40}
-              mode="flat"
-            />
-          </View>
-        </View>
-      </TouchableWithoutFeedback>
-    </Provider>
-  );
+        </TouchableWithoutFeedback>
+      </Provider>
+    );
+  }
+  return <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><StatusBar barStyle={'dark-content'} /><Text>No students !</Text></View>
 };
 
 export default StudentsList;

@@ -19,6 +19,8 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import Modal from "react-native-modal";
 import { IconButton,Provider } from "react-native-paper";
 import BottomSheetSearchFilter from './BottomSheetSearchFilter'
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect } from "react";
 let cnt=1, cnt2=0, catCnt=0;
 const ScreenWidth = Dimensions.get('screen').width
 const categories = [
@@ -54,6 +56,34 @@ const SearchBar = () => {
     setSelectedCategory(category.id);
   };
 
+
+
+
+
+  const GetCategories = async () =>{
+    const token = await AsyncStorage.getItem('token')
+    console.log(token)
+    if(token !==null){
+      try{
+        const response = await fetch('http://192.168.0.108:8000/api/allCategories',{
+          method:'GET',
+          headers:{
+            "Accept": 'application/json',
+            "Content-Type": "application/json",
+            "Authorization":`Bearer ${token}`
+          }
+        })
+        const resData = await response.json()
+        console.log(resData.categories)
+      }
+      catch(err){
+        console.log(err)
+      }
+    }
+  }
+  useEffect(()=>{
+    GetCategories()
+  },[])
   //----------------
   const handleSearchTextChange = (text) => {
     setSearchText(text);

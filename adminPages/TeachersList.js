@@ -8,15 +8,151 @@ import {
   StatusBar,
   SafeAreaView,
   Image,
+  
+
 } from "react-native";
-import React, { useState } from "react";
-import { IconButton, DataTable, Provider } from "react-native-paper";
+import React, { useState,useEffect } from "react";
+import { IconButton, DataTable, Provider ,Button} from "react-native-paper";
 import Modal from "react-native-modal";
 import Constants from "expo-constants";
+import { useIsFocused } from "@react-navigation/native";
+import { ActivityIndicator } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Sharing from "expo-sharing";
+import { Buffer as NodeBuffer } from "buffer";
+import * as FileSystem from "expo-file-system";
+import ExcelJS from "exceljs";
 const TeachersList = () => {
   const [searchText, setSearchText] = useState("");
   const [showCancelButton, setShowCancelButton] = useState(false);
   const [showSortModal, setShowSortModal] = useState(false);
+
+
+  const isFocused = useIsFocused()
+
+
+
+  const generateShareableExcel = async () => {
+    const now = new Date();
+    const fileName = `${now.getTime()}.xlsx`;
+    const fileUri = FileSystem.cacheDirectory + fileName;
+    return new Promise((resolve, reject) => {
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = "Me";
+      workbook.created = now;
+      workbook.modified = now;
+      // Add a sheet to work on
+      const worksheet = workbook.addWorksheet("My Sheet", {});
+      // Just some columns as used on ExcelJS Readme
+
+      worksheet.columns = [
+        { header: "Id", key: "id", width: 5 },
+        { header: "Name", key: "name", width: 32 },
+        { header: "Email", key: "email", width: 30 },
+      ];
+      // Add some test dat
+      teachersList.forEach((i) => {
+        worksheet.addRow({
+          id: i.id,
+          name: i.name,
+          email: i.email,
+        });
+      });
+      // Test styling
+
+      // Style first row
+      worksheet.getRow(1).fill = {
+        type:"pattern",
+        pattern:"solid",
+        fgColor: {argb :"FFFF01"}
+      }
+      worksheet.getRow(1).font = {
+        name: "Comic Sans MS",
+        family: 4,
+        size: 12,
+        underline: "double",
+        bold:true,
+        
+      };
+      
+      // Style second column
+      worksheet.eachRow((row, rowNumber) => {
+        row.getCell(2).font = {
+          name: "Arial Black",
+          //  color: { argb: 'FF00FF00' },
+          family: 2,
+          size: 14,
+          bold: true,
+        };
+      });
+
+      // Write to file
+      workbook.xlsx.writeBuffer().then((buffer) => {
+        // Do this to use base64 encoding
+        const nodeBuffer = NodeBuffer.from(buffer);
+        const bufferStr = nodeBuffer.toString("base64");
+        FileSystem.writeAsStringAsync(fileUri, bufferStr, {
+          encoding: FileSystem.EncodingType.Base64,
+        }).then(() => {
+          resolve(fileUri);
+        });
+      });
+    });
+  };
+
+  //-------
+
+  const ShareExcel = async () => {
+    const shareableExcelUri = await generateShareableExcel();
+    Sharing.shareAsync(shareableExcelUri, {
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // Android
+      dialogTitle: "Your dialog title here", // Android and Web
+      UTI: "com.microsoft.excel.xlsx", // iOS
+    })
+      .catch((error) => {
+        console.error("Error", error);
+      })
+      .then(() => {
+        console.log("Return from sharing dialog");
+      });
+  };
+
+
+  const [teachersList,setTeachersList] = useState([])
+  const getAllTeachers= async () => {
+    try{
+      const response = await fetch('http://192.168.0.108:8000/api/getAllTeachers',{
+        method:'GET',
+      })
+      const resData = await response.json()
+      // console.log(resData)
+      if(!resData.message){
+        setTeachersList(resData.instructors)
+        return
+      }
+      alert(resData.message)
+
+    }
+    //   console.log(resData);
+    //   alert('testing')
+    catch(err){
+      console.log(err)
+    }
+  }
+
+  useEffect(()=>{
+    if(isFocused){
+      getAllTeachers()
+    }
+  },[isFocused])
+
+
+
+
+
+
+
 
   const handleSearchTextChange = (text) => {
     setSearchText(text);
@@ -32,44 +168,7 @@ const TeachersList = () => {
   const handleFilterPress = () => {
     setShowSortModal(true);
   };
-  const [items] = React.useState([
-    {
-      key: 1,
-      name: "Cupcake",
-      calories: 356,
-      fat: 16,
-    },
-    {
-      key: 2,
-      name: "Eclair",
-      calories: 262,
-      fat: 16,
-    },
-    {
-      key: 3,
-      name: "Frozen yogurt",
-      calories: 159,
-      fat: 6,
-    },
-    {
-      key: 4,
-      name: "Gingerbread",
-      calories: 305,
-      fat: 3.7,
-    },
-    {
-      key: 5,
-      name: "Gingerbread",
-      calories: 305,
-      fat: 3.7,
-    },
-    {
-      key: 6,
-      name: "Gingerbread",
-      calories: 305,
-      fat: 3.7,
-    },
-  ]);
+  
   const handleSortOptionSelect = (option) => {
     // Handle sort option selection here
     console.log("Selected sort option:", option);
@@ -84,21 +183,43 @@ const TeachersList = () => {
     Keyboard.dismiss();
   };
 
+  const DeleteTeacher = async (id) =>{
+    const token = await AsyncStorage.getItem('token')
+    try{
+      const response = await fetch('http://192.168.0.108:8000/api/deleteAccUser/'+id,
+      {
+        method:'GET',
+        headers:{
+          'Accept':'applciation/json',
+          'Content-Type':'application/json' ,
+          'Authorization' : `Bearer ${token}`
+        },
+      })
+      const resData = response.json()
+      console.log(resData.message)
+      getAllTeachers();
+    }
+    catch(err){
+      console.log(err)
+    }
+  }
+
   const MyTable = () => {
     const [page, setPage] = React.useState(0);
-    const [numberOfItemsPerPageList] = React.useState([2, 3, 4, 5,items.length]);
+    const [numberOfItemsPerPageList] = React.useState([1, 2, 5 , 10]);
     const [itemsPerPage, onItemsPerPageChange] = React.useState(
-      numberOfItemsPerPageList[0]
+      numberOfItemsPerPageList[1]
     );
 
     const from = page * itemsPerPage;
-    const to = Math.min((page + 1) * itemsPerPage, items.length);
+    const to = Math.min((page + 1) * itemsPerPage, teachersList.length);
 
     React.useEffect(() => {
       setPage(0);
     }, [itemsPerPage]);
 
     return (
+      <>
       <DataTable>
         <DataTable.Header>
           <DataTable.Title textStyle={{}}>#</DataTable.Title>
@@ -108,9 +229,9 @@ const TeachersList = () => {
           <DataTable.Title></DataTable.Title>
         </DataTable.Header>
 
-        {items.slice(from, to).map((item) => (
-          <DataTable.Row key={item.key}>
-            <DataTable.Cell>{item.key}</DataTable.Cell>
+        {teachersList.slice(from, to).map((item) => (
+          <DataTable.Row key={item.id}>
+            <DataTable.Cell>{item.id}</DataTable.Cell>
             <DataTable.Cell>
               <View style={{ borderRadius: "100", overflow: "hidden" }}>
                 <Image
@@ -119,10 +240,10 @@ const TeachersList = () => {
                 />
               </View>
             </DataTable.Cell>
-            <DataTable.Cell>Cesar Ab</DataTable.Cell>
-            <DataTable.Cell>cesar@gmail.com</DataTable.Cell>
-            <DataTable.Cell style={{alignItems:'center',justifyContent:'center'}}>
-              <IconButton style={{margin:-3}} icon={"close"} iconColor="red" />
+            <DataTable.Cell>{item.name}</DataTable.Cell>
+            <DataTable.Cell>{item.email}</DataTable.Cell>
+            <DataTable.Cell  style={{alignItems:'center',justifyContent:'center'}}>
+              <IconButton onPress={()=>DeleteTeacher(item.id)} style={{margin:-3}} icon={"close"} iconColor="red" />
             </DataTable.Cell>
           </DataTable.Row>
         ))}
@@ -130,9 +251,9 @@ const TeachersList = () => {
         <DataTable.Pagination
           theme={'red'}
           page={page}
-          numberOfPages={Math.ceil(items.length / itemsPerPage)}
+          numberOfPages={Math.ceil(teachersList.length / itemsPerPage)}
           onPageChange={(page) => setPage(page)}
-          label={`${from + 1}-${to} of ${items.length}`}
+          label={`${from + 1}-${to} of ${teachersList.length}`}
           numberOfItemsPerPageList={numberOfItemsPerPageList}
           numberOfItemsPerPage={itemsPerPage}
           onItemsPerPageChange={onItemsPerPageChange}
@@ -140,9 +261,14 @@ const TeachersList = () => {
           selectPageDropdownLabel={"Rows per page"}
         />
       </DataTable>
+      <Button mode='elevated' style={{width:'25%',alignSelf:'flex-end',borderRadius:5,marginRight:10}} buttonColor="#6366f1" textColor="#fff" icon={'share-variant'} onPress={ShareExcel}>Export</Button>
+          </>
     );
   };
-
+  const NoTutors = () =>{
+    return(<ActivityIndicator style={styles.activityIndicatorStyle} />)
+    
+  }
   return (
     <Provider>
       <View style={styles.container}>
@@ -161,14 +287,14 @@ const TeachersList = () => {
               fontWeight: "500",
             }}
           >
-            Teachers({items.length})
+            Teachers({teachersList.length})
           </Text>
           <View
             style={{
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-around",
-              height: 70,
+              height: 45,
               borderRadius: 10,
               backgroundColor: "white",
               marginHorizontal: 15,
@@ -238,7 +364,10 @@ const TeachersList = () => {
           </View>
         </View>
         {/* */}
-        <MyTable />
+        
+
+        
+        {teachersList.length > 0 ? <MyTable /> : <NoTutors />}
       </View>
     </Provider>
   );
@@ -265,4 +394,17 @@ const styles = StyleSheet.create({
     borderBottomColor: "#CCC",
     borderBottomWidth: 1,
   },
+  activityIndicatorStyle:{
+    flex:1,
+    position:'absolute',
+    marginLeft:'auto',
+    marginRight:'auto',
+    marginBottom:'auto',
+    marginRight:'auto',
+    left:0,
+    right:0,
+    top:0,
+    bottom:0,
+    justifyContent:'center'
+}
 });

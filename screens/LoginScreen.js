@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { CheckBox } from "react-native-elements";
 import { TextInput,ActivityIndicator, Button } from "react-native-paper";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SvgXml } from "react-native-svg";
 const screenHeight = Dimensions.get("window").height;
 const screenWidth = Dimensions.get("window").width;
@@ -38,6 +39,26 @@ const LoginScreen = ({ navigation }) => {
   const [isFilledPassword,setIsFilledPassword] = useState(true)
   const handleRememberMe = () => {
     setRememberMe(!rememberMe);
+  };
+  const storeData = async (value) => {
+    try {
+      await AsyncStorage.setItem('token', value);
+    } catch (err) {
+      console.log(err)
+    }
+  };
+
+
+
+  const getData = async () => {
+    try {
+      const value = await AsyncStorage.getItem('token');
+      if (value !== null) {
+        console.log('value :',value)
+      }
+    } catch (e) {
+      console.log(e)
+    }
   };
 
 
@@ -80,7 +101,7 @@ const LoginScreen = ({ navigation }) => {
     await fetch("http://192.168.0.108:8000/api/login", {
       method: "POST",
       headers: {
-        Accept: "application/json",
+        "Accept": "application/json",
         "Content-Type": "application/json",
         
       },
@@ -95,14 +116,21 @@ const LoginScreen = ({ navigation }) => {
         if(resData.username){
           console.log(resData.username);
           console.log(resData.token)
+          storeData(resData.token)
+          //getData()
           if(resData.role === 2){
             navigation.navigate('BottomTab', {
               screen: 'HomeScreen',
-              params: { uname: resData.username ,usertoken:resData.token },
+              params: { uname: resData.username ,tok:resData.token},
             });
           }
           else if(resData.role === 3){
-            navigation.navigate("InstructorProfile");
+            navigation.navigate("InstructorProfile",{
+              tok:resData.token
+            });
+          }
+          else{
+            navigation.navigate("AdminTab")
           }
         }
         else{
@@ -126,7 +154,7 @@ const LoginScreen = ({ navigation }) => {
             {/* <ActivityIndicator size={'large'} color="red"/> */}
             <View style={{ gap: 10 }}>
               <TextInput
-                
+                autoCapitalize='none'
                 label={/*isFilledEmail ? "Email" : "Email is required"*/ "Email"}
                 mode="outlined"
                 style={{ width: 250, height: 40 }}
@@ -203,7 +231,7 @@ const LoginScreen = ({ navigation }) => {
                     containerStyle={{ borderWidth: 0, margin: 0, padding: 0,backgroundColor:"#fff" }}
                     textStyle={{ borderWidth: 0, margin: 0, padding: 0 }}
                   />
-                  <TouchableOpacity onPress={()=>navigation.navigate("Actions")}>
+                  <TouchableOpacity onPress={()=>navigation.navigate("AdminTab")}>
                     <Text>Forgot password?</Text>
                   </TouchableOpacity>
                   
@@ -271,6 +299,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 20,
+    paddingVertical:20
   },
   input: {
     height: 20,

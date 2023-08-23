@@ -21,10 +21,40 @@ import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { SvgXml } from "react-native-svg";
 import { StackActions } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const ScreenWidth = Dimensions.get("window").width;
 export default function InstructorProfile() {
+  
   const [modalVisible, setModalVisible] = useState(false);
   const [show, setShow] = useState(false);
+  const [user,setUser] = useState({})
+  const [usertoken,setUserToken] = useState('')
+  const getLoggedInUserDetails = async () =>{
+    const token = await AsyncStorage.getItem('token')
+    try{
+      const response = await fetch("http://192.168.0.108:8000/api/getLoggedInUserDetails",{
+        method:"GET",
+        headers:{
+          "Accept": 'application/json',
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      })
+      const resData = await response.json()
+      
+      console.log(resData.user)
+      setUser(resData.user)
+      //console.log(resData.user.name)
+      // console.log(user)
+    }
+    catch(err){
+      console.log('error:',err)
+    }
+  }
+  React.useEffect(()=>{
+    //getData()
+    getLoggedInUserDetails()
+  },[])
   const navigation = useNavigation();
   const whitelogo =`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="78" height="26" viewBox="0 0 78 26" fill="none">
   <rect width="78" height="26" fill="url(#pattern0)"/>
@@ -36,9 +66,15 @@ export default function InstructorProfile() {
   </defs>
   </svg>`
   const handleLogout = async () =>{
+    const val = await AsyncStorage.getItem('token')
     try{
       const response = await fetch('http://192.168.0.108:8000/api/logout',{
         method: 'POST',
+        headers:{
+          "Accept": 'application/json',
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${val}`,
+        }
       })
       const resData = await response.json()
       console.log(resData.message)
@@ -88,12 +124,14 @@ export default function InstructorProfile() {
         >
           <View style={{ borderRadius: "100", overflow: "hidden" }}>
             <Image
-              source={require("../images/profilepic.jpg")}
-              style={{ width: 70, height: 70 }}
+            source={{uri: user.profilepicture}}
+               //source={require("../images/profilepic.jpg")}
+              style={{ width: 100, height: 100,backgroundColor:'#ccc' }}
+              resizeMode='cover'
             />
           </View>
           <Text style={{ color: "#fff", fontSize: 18, fontWeight: "600" }}>
-            Cesar Abboud
+            {user.name}
           </Text>
           <TouchableOpacity onPress={()=>navigation.navigate("EditProfile")}>
             <Text
