@@ -57,7 +57,7 @@ const Settings = () => {
           onPress: async () => {
             const token = await AsyncStorage.getItem('token')
             if(token!==null){
-              const response = await fetch('http://192.168.0.108:8000/api/deleteAcc',{
+              const response = await fetch('http://192.168.0.101:8000/api/deleteAcc',{
                 method:"GET",
                 headers:{
                   "Accept": 'application/json',

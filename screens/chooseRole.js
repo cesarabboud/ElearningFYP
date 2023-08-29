@@ -30,7 +30,7 @@ const RadioButton = ({route}) => {
   const {uname,email,pword} = route.params
   const handleContinueBtn = async () => {
     try {
-      const response = await fetch('http://192.168.0.108:8000/api/register', {
+      const response = await fetch('http://192.168.0.101:8000/api/register', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',

@@ -17,21 +17,27 @@ import {
 import TestScreen from "./testScreen";
 import { StatusBar } from "react-native";
 import { IconButton } from "react-native-paper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const HomeScreen = ({route}) => {
   // const [currentTime, setCurrentTime] = useState("");
-
-  // useEffect(() => {
-  //   const intervalId = setInterval(() => {
-  //     const now = new Date();
-  //     const hours = String(now.getHours()).padStart(2, "0");
-  //     const minutes = String(now.getMinutes()).padStart(2, "0");
-  //     const seconds = String(now.getSeconds()).padStart(2, "0");
-
-  //     setCurrentTime(`${hours}:${minutes}:${seconds}`);
-  //   }, 1000);
-
-  //   return () => clearInterval(intervalId);
-  // }, []);
+  const [cat,setCat] = useState([])
+  const [topRated,setTopRated] = useState([])
+  const getHomeScrData = async () =>{
+    const token = await AsyncStorage.getItem('token')
+    const response = await fetch('http://192.168.0.101:8000/api/HomeScr',{
+      headers:{
+        "Authorization":`Bearer ${token}`
+      }
+    })
+    const resData = await response.json()
+    
+    setCat(resData.categories)
+    setTopRated(resData.topRated)
+    console.log(topRated.length)
+  }
+  useEffect(()=>{
+    getHomeScrData()
+  },[])
   /*const [currentIndex, setCurrentIndex] = useState(0);
   const carouselRef = useRef(null);*/
   const profileSvg = `<svg width="21" height="27" viewBox="0 0 21 27" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -199,7 +205,11 @@ const HomeScreen = ({route}) => {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ gap: 15, marginBottom: 20,paddingHorizontal:20 }}
             >
-              <LinearGradient
+              {
+                cat.map((c,idx) =>{
+                  return (
+                    <LinearGradient
+                    key={idx}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 colors={["#0AB072", "#02BA5D", "#11B741"]}
@@ -214,64 +224,17 @@ const HomeScreen = ({route}) => {
                   style={{
                     color: "#fff",
                     fontSize: 24,
-                    fontWeight: "500",
-                    width: 90,
+                    fontWeight: "bold",
+                    width: 130,
                     marginLeft: 20,
                   }}
                 >
-                  Category Name
+                  {c.name}
                 </Text>
               </LinearGradient>
-
-              <LinearGradient
-                // Button Linear Gradient
-                start={{ x: 0, y: 0 }} // Left-to-right
-                end={{ x: 1, y: 0 }} // Left-to-right
-                colors={["#0AB072", "#02BA5D", "#11B741"]}
-                style={{
-                  width: 200,
-                  height: 120,
-                  justifyContent: "center",
-                  borderRadius: 15,
-                }}
-              >
-                <Text
-                  style={{
-                    color: "#fff",
-                    fontSize: 24,
-                    fontWeight: "500",
-                    width: 90,
-                    marginLeft: 20,
-                  }}
-                >
-                  Category Name
-                </Text>
-              </LinearGradient>
-
-              <LinearGradient
-                // Button Linear Gradient
-                start={{ x: 0, y: 0 }} // Left-to-right
-                end={{ x: 1, y: 0 }} // Left-to-right
-                colors={["#0AB072", "#02BA5D", "#11B741"]}
-                style={{
-                  width: 200,
-                  height: 120,
-                  justifyContent: "center",
-                  borderRadius: 15,
-                }}
-              >
-                <Text
-                  style={{
-                    color: "#fff",
-                    fontSize: 24,
-                    fontWeight: "500",
-                    width: 90,
-                    marginLeft: 20,
-                  }}
-                >
-                  Category Name
-                </Text>
-              </LinearGradient>
+                  )
+                })
+              }
             </ScrollView>
           </View>
           <View
@@ -286,12 +249,20 @@ const HomeScreen = ({route}) => {
               <Text
                 style={{ fontSize: 24, fontWeight: "500", color: "#1E2A23" }}
               >
-                Popular
+                Top Rated
               </Text>
               <TouchableOpacity style={styles.seeAllBtn}>
                 <Text style={styles.seeText}>See All</Text>
               </TouchableOpacity>
             </View>
+            {
+              topRated.map((tr,idx)=>{
+                return(
+                  <Text>{idx + 1}) {tr.title} Rating: {tr.rating}/5</Text>
+                )
+                
+              })
+            }
           </View>
         </SafeAreaView>
       </ScrollView>

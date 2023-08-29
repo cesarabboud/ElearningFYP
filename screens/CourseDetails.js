@@ -10,16 +10,45 @@ import {
   Dimensions,
 } from "react-native";
 //import Animated,{ FadeInRight } from 'react-native-reanimated'
-import React, { useState } from "react";
-import { useNavigation } from "@react-navigation/native";
+import React, { useState, useEffect } from "react";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { IconButton } from "react-native-paper";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-const CourseDetails = () => {
+import AsyncStorage from "@react-native-async-storage/async-storage";
+const CourseDetails = ({route}) => {
+  const {courseId} = route.params
+  const [course,setCourse] = useState({})
+  const [nbrev,setNbrev] = useState(0)
+  const DetailsDeCours = async () =>{
+      const token = await AsyncStorage.getItem('token')
+      if(token!==null){
+        try{
+          const response = await fetch('http://192.168.0.101:8000/api/courseDetails/'+courseId,{
+            method:"GET",
+            headers:{
+              "Authorization":`Bearer ${token}`
+            }
+          })
+          const resData = await response.json()
+          console.log(resData)
+          setCourse(resData.course)
+          setNbrev(resData.nbrev)
+          console.log(course)
+        }
+        catch(err){
+          console.log(err)
+        }
+      }
+    }
+  useEffect(()=>{
+    DetailsDeCours()
+  },[])
   const [showMore, setShowMore] = useState(false);
   const navigation = useNavigation();
   const toggleShowMore = () => {
     setShowMore(!showMore);
   };
+
   return (
     <ScrollView>
       <Image source={require("../images/jsyellow.png")} />
@@ -42,10 +71,10 @@ const CourseDetails = () => {
             fontSize: 14,
           }}
         >
-          Coding
+          Category{/* {course.get_category.name} */}
         </Text>
         <Text style={{ fontWeight: "600", fontSize: 16, fontWeight: "600" }}>
-          Learning JS in 30 Days
+          {course.title}
         </Text>
         <View
           style={{
@@ -93,9 +122,9 @@ const CourseDetails = () => {
                 iconColor="#ffc107"
                 style={{ margin: 0 }}
               />
-              <Text style={{ marginLeft: -5, fontWeight: "600" }}>4.0</Text>
+              <Text style={{ marginLeft: -5, fontWeight: "600" }}>{course.rating}.0</Text>
             </View>
-            <Text style={{ color: "#a9a9a9", fontWeight: "600" }}>(20)</Text>
+            <Text style={{ color: "#a9a9a9", fontWeight: "600" }}>({nbrev})</Text>
           </View>
         </View>
         <View>
@@ -107,11 +136,7 @@ const CourseDetails = () => {
               numberOfLines={showMore ? undefined : 2}
             >
               <Text style={{ marginRight: 10 }}>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
-                euismod, sapien vel bibendum ultricies, velit nunc bibendum
-                nunc, vel blandit velit magna vel velit. Sed euismod, sapien vel
-                bibendum ultricies, velit nunc bibendum nunc, vel blandit velit
-                magna vel velit
+                {course.description}
               </Text>
               <Text
                 style={{
@@ -152,40 +177,40 @@ const CourseDetails = () => {
               justifyContent: "center",
             }}
           >
-            <Text style={{ fontSize: 20 }}>4.0</Text>
+            <Text style={{ fontSize: 20 }}>{course.rating}.0</Text>
             <Text style={{ fontSize: 20 }}>/5</Text>
           </View>
-          <Text style={{ fontWeight: "500" }}>Based on 20 Reviews</Text>
+          <Text style={{ fontWeight: "500" }}>Based on {nbrev} Reviews</Text>
           <View style={{ flexDirection: "row", alignSelf: "center" }}>
             <IconButton
               icon="star"
-              iconColor="#ffc107"
+              iconColor={ course.rating >= 1 ? "#ffc107" : "#b5b2b2"}
               size={28}
               style={styles.starIcon}
             />
             <IconButton
               icon="star"
-              iconColor="#ffc107"
+              iconColor={ course.rating >= 2 ? "#ffc107" : "#b5b2b2"}
               size={28}
               style={styles.starIcon}
             />
             <IconButton
               icon="star"
-              iconColor="#ffc107"
+              iconColor={ course.rating >= 3 ? "#ffc107" : "#b5b2b2"}
               size={28}
               style={styles.starIcon}
             />
             <IconButton
               icon="star"
-              iconColor="#ffc107"
+              iconColor={ course.rating >= 4 ? "#ffc107" : "#b5b2b2"}
               size={28}
               style={styles.starIcon}
             />
             <IconButton
               icon="star"
-              iconColor="#b5b2b2"
+              iconColor={ course.rating >= 5 ? "#ffc107" : "#b5b2b2"}
               size={28}
-              style={{ margin: 0 }}
+              style={styles.starIcon}
             />
           </View>
         </View>
@@ -280,7 +305,7 @@ const CourseDetailsCustomComponent = () => {
   return (
     <TouchableOpacity
       style={{ alignItems: "center", justifyContent: "center" }}
-      onPress={() => navigation.navigate("LoginScreen")}
+      onPress={() => navigation.goBack()}
     >
       <IconButton
         icon="chevron-left"
@@ -293,37 +318,38 @@ const CourseDetailsCustomComponent = () => {
 };
 
 const CourseDetailsExport = () => {
+  const route = useRoute();
   const [isBookmarkPressed, setIsBookmarkPressed] = useState(false);
   return (
     <Stack.Navigator>
-<Stack.Screen
-      name="CourseDetails"
-      component={CourseDetails}
-      options={{
-        headerLeft: () => <CourseDetailsCustomComponent />,
-        headerShown: true,
-        title: "Course Details",
-        headerTitleStyle: {
-          fontSize: 16,
-        },
-        headerRight: () => {
-          return (
-            <TouchableOpacity
-              onPress={() => setIsBookmarkPressed(!isBookmarkPressed)}
-            >
-              <IconButton
-                icon={isBookmarkPressed ? "bookmark" : "bookmark-outline"}
-                style={{ margin: 0 }}
-                animated
-                iconColor="#000"
-              />
-            </TouchableOpacity>
-          );
-        },
-      }}
-    />
+      <Stack.Screen
+        name="CourseDetails"
+        component={CourseDetails}
+        initialParams={{courseId : route.params.cid}}
+        options={{
+          headerLeft: () => <CourseDetailsCustomComponent />,
+          headerShown: true,
+          title: "Course Details",
+          headerTitleStyle: {
+            fontSize: 16,
+          },
+          headerRight: () => {
+            return (
+              <TouchableOpacity
+                onPress={() => setIsBookmarkPressed(!isBookmarkPressed)}
+              >
+                <IconButton
+                  icon={isBookmarkPressed ? "bookmark" : "bookmark-outline"}
+                  style={{ margin: 0 }}
+                  animated
+                  iconColor="#000"
+                />
+              </TouchableOpacity>
+            );
+          },
+        }}
+      />
     </Stack.Navigator>
-    
   );
 };
 export default CourseDetailsExport;

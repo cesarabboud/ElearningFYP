@@ -33,7 +33,7 @@ const StudentsList = () => {
   const getmyStd = async () =>{
     const val = await AsyncStorage.getItem('token')
     try{
-      const response = await fetch('http://192.168.0.108:8000/api/getInstructorProfileInfo',{
+      const response = await fetch('http://192.168.0.100:8000/api/getInstructorProfileInfo',{
         method: 'GET',
         headers:{
           "Accept": 'application/json',

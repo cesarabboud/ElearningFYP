@@ -35,7 +35,7 @@ const  StudentProfile = () => {
   const getLoggedInUserDetails = async () =>{
     const val = await AsyncStorage.getItem('token')
     try{
-      const response = await fetch("http://192.168.0.108:8000/api/getLoggedInUserDetails",{
+      const response = await fetch("http://192.168.0.101:8000/api/getLoggedInUserDetails",{
         method:"GET",
         headers:{
           "Accept": 'application/json',
@@ -71,7 +71,7 @@ const  StudentProfile = () => {
   const handleLogout = async () =>{
     try{
       const val = await AsyncStorage.getItem('token')
-      const response = await fetch('http://192.168.0.108:8000/api/logout',{
+      const response = await fetch('http://192.168.0.101:8000/api/logout',{
         method: 'POST',
         headers:{
           "Accept": 'application/json',
@@ -308,8 +308,9 @@ const  StudentProfile = () => {
           }}
           enableBackdropDismiss
         >
-          <View style={{ paddingLeft: 25, paddingVertical: 25 }}>
+          <ScrollView style={{ paddingLeft: 25, paddingVertical: 25 }}>
             <View>
+              
               <TouchableOpacity
                 onPress={() => navigation.navigate("Settings")}
                 style={{ flexDirection: "row", alignItems: "center" }}
@@ -414,7 +415,7 @@ const  StudentProfile = () => {
                       }}
                     /> */}
             </View>
-          </View>
+          </ScrollView>
         </BottomSheet>
         
       </View>

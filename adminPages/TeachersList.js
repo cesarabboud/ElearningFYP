@@ -122,7 +122,7 @@ const TeachersList = () => {
   const [teachersList,setTeachersList] = useState([])
   const getAllTeachers= async () => {
     try{
-      const response = await fetch('http://192.168.0.108:8000/api/getAllTeachers',{
+      const response = await fetch('http://192.168.0.100:8000/api/getAllTeachers',{
         method:'GET',
       })
       const resData = await response.json()

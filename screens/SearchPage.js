@@ -21,6 +21,7 @@ import { IconButton,Provider } from "react-native-paper";
 import BottomSheetSearchFilter from './BottomSheetSearchFilter'
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect } from "react";
+import Search2 from './Search2'
 let cnt=1, cnt2=0, catCnt=0;
 const ScreenWidth = Dimensions.get('screen').width
 const categories = [
@@ -65,7 +66,7 @@ const SearchBar = () => {
     console.log(token)
     if(token !==null){
       try{
-        const response = await fetch('http://192.168.0.108:8000/api/allCategories',{
+        const response = await fetch('http://192.168.0.101:8000/api/allCategories',{
           method:'GET',
           headers:{
             "Accept": 'application/json',
@@ -145,15 +146,16 @@ const SearchBar = () => {
   return (
     <Provider>
 <TouchableWithoutFeedback onPress={handleScreenPress}>
-      <ScrollView>
+      <ScrollView style={{backgroundColor:'#1E2A23'}}>
       <SafeAreaView>
+        
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-around",
             height: 50,
-            borderWidth: 1,
+            //borderWidth: 1,
             borderRadius: 30,
             backgroundColor: "white",
             marginHorizontal: 15,
@@ -259,8 +261,8 @@ const SearchBar = () => {
           </ScrollView>
         </View>
         <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:20,marginHorizontal:15}}>
-        <Text style={{ fontWeight: "700", fontSize: 30, }}>
-          Categories
+        <Text style={{ fontWeight: "700", fontSize: 30, color:"#fff" }}>
+          Recently Uploaded
         </Text>
         {/* <TouchableOpacity style={{backgroundColor:'#1E2A23',padding:8,borderRadius:20,width:65}}>
           <Text style={{alignSelf:'center',fontWeight:'600',color:"#fff"}}>See All</Text>
@@ -268,7 +270,7 @@ const SearchBar = () => {
         </View>
         
         {/* Category List */}
-          <View
+          {/* <View
             style={{
               alignItems: "center",
               flexDirection: "row",
@@ -280,8 +282,8 @@ const SearchBar = () => {
             {categories.map((item, idx) => {
               return <CategoryItem key={idx} item={item} />;
             })}
-          </View>
-          <StatusBar style="dark" backgroundColor="green" />
+          </View> */}
+          <StatusBar style="light" />
       </SafeAreaView>
       <BottomSheetSearchFilter
           show={show}
@@ -294,6 +296,8 @@ const SearchBar = () => {
             
           </View>
         </BottomSheetSearchFilter>
+        <Search2 />
+
       </ScrollView>
       
     </TouchableWithoutFeedback>

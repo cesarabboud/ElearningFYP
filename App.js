@@ -1,4 +1,4 @@
-import React, { useState, useEffect, } from "react";
+import React, { useState, useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import {
   StyleSheet,
@@ -7,9 +7,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Image,
-  
   TouchableWithoutFeedback,
-  
 } from "react-native";
 import MyWebComponent from "./screens/WebBrowser2";
 import Splash from "./screens/splash";
@@ -23,9 +21,8 @@ import {
   NavigationContainer,
   useNavigation,
   getFocusedRouteNameFromRoute,
-  
 } from "@react-navigation/native";
-import { createNativeStackNavigator  } from "@react-navigation/native-stack";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import TestScreen from "./screens/testScreen";
@@ -51,11 +48,13 @@ import UploadCourse from "./instructorPages/UploadCourse";
 import InstructorStudents from "./instructorPages/InstructorStudents";
 import EditProfile from "./instructorPages/EditProfile";
 import WebBrowser from "./screens/WebBrowser";
-import SearchResults from './screens/SearchResults'
+import SearchResults from "./screens/SearchResults";
 import ActionsWithPDF from "./screens/ActionsWithPDF";
+import QuestionsAnswers from "./screens/QuestionsAnswers";
+import { SvgXml } from "react-native-svg";
+import Search2 from './screens/Search2'
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-
 
 function MyTabsAdmin() {
   return (
@@ -135,15 +134,13 @@ function MyTabsStudent() {
     <Tab.Navigator
       initialRouteName="HomeScreen"
       screenOptions={{
-        tabBarActiveTintColor: "#03ba55", 
+        tabBarActiveTintColor: "#03ba55",
         tabBarInactiveTintColor: "#fff",
         headerShown: false,
         tabBarStyle: { backgroundColor: "#000" },
       }}
-      
     >
       <Tab.Screen
-
         name="HomeScreen"
         component={HomeScreen}
         options={{
@@ -171,7 +168,23 @@ function MyTabsStudent() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="cart" color={color} size={size} />
           ),
-          //tabBarBadge:2
+          // tabBarBadge:2,
+          tabBarBadgeStyle:{
+            justifyContent:'center',
+            alignItems:'center',
+            fontSize:12,
+            paddingTop:2
+          }
+        }}
+      />
+      <Tab.Screen
+        name="QuestionsAnswers"
+        component={QuestionsAnswers}
+        options={{
+          tabBarLabel: "Q/A",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="frequently-asked-questions" color={color} size={size} />
+          )
         }}
       />
       {/* <Tab.Screen
@@ -225,8 +238,6 @@ const AddReviewHeader = () => {
   );
 };
 const App = ({ navigation }) => {
-  
-
   // const CustomHeader = ({ scene, navigation }) => {
   //   return (
   //     <View style={styles.headerContainer}>
@@ -305,11 +316,7 @@ const App = ({ navigation }) => {
             headerTransparent: true,
           })}
         /> */}
-        <Stack.Screen
-          name="CourseDetails"
-          component={CourseDetails}
-          
-        />
+        <Stack.Screen name="CourseDetails" component={CourseDetails} />
         <Stack.Screen
           name="AddReview"
           component={AddReview}
@@ -402,29 +409,18 @@ const App = ({ navigation }) => {
         <Stack.Screen
           name="EditProfile"
           component={EditProfile}
-          options={{ headerShown: true, title: "Edit Profile",headerLeft:()=><></>}}
+          options={{
+            headerShown: true,
+            title: "Edit Profile",
+            headerLeft: () => <></>,
+          }}
         />
-        <Stack.Screen
-          name="WebBrowser"
-          component={WebBrowser}
-          
-        />
-        <Stack.Screen
-        name="Studentprofile"
-        component={StudentProfile}
-        />
-        <Stack.Screen 
-        name="AnimationScreen"
-        component={SearchResults}
-        />
-        <Stack.Screen
-        name="MyWebComponent"
-        component={MyWebComponent}
-        />
-        <Stack.Screen 
-        name="Actions"
-        component={ActionsWithPDF}
-        />
+        <Stack.Screen name="WebBrowser" component={WebBrowser} />
+        <Stack.Screen name="Studentprofile" component={StudentProfile} />
+        <Stack.Screen name="AnimationScreen" component={SearchResults} />
+        <Stack.Screen name="MyWebComponent" component={MyWebComponent} />
+        <Stack.Screen name="Actions" component={ActionsWithPDF} />
+        <Stack.Screen name="Search2" component={Search2} />
       </Stack.Navigator>
     </NavigationContainer>
   );

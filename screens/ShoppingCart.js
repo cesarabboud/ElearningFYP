@@ -7,16 +7,104 @@ import {
   SafeAreaView,
   ScrollView,
   Dimensions,
-  useColorScheme
+  useColorScheme,
+  Button,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { SvgXml } from "react-native-svg";
+import Constants from "expo-constants";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { IconButton } from "react-native-paper";
+import { Feather, Ionicons } from "@expo/vector-icons";
+import { useIsFocused } from "@react-navigation/native";
 const ShoppingCart = () => {
+  const [cartitems, setCartItems] = useState([]);
+  const [total,setTotal] = useState(0)
+  const isFocused = useIsFocused()
+  const getCartContent = async () => {
+    const token = await AsyncStorage.getItem("token");
+    if (token !== null) {
+      try {
+        const response = await fetch(
+          "http://192.168.0.101:8000/api/displayCart",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-
-
-  const emptycartsvg =`<svg xmlns="http://www.w3.org/2000/svg" width="244" height="204" viewBox="0 0 244 204" fill="none">
+        const resData = await response.json();
+        setCartItems(resData.cartCourses);
+        if(resData.prixtotal !== undefined ){
+          console.log('prix diff de 0 :',resData.prixtotal)
+          setTotal(resData.prixtotal)
+          
+        }
+        else{
+          setTotal(0)
+          //console.log('tot =',total)
+        }
+        
+        // console.log(cartitems.length)
+        // console.log('cart items :', resData.cartitems)
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  };
+  const deleteItemFromCart = async (id) => {
+    //console.log('hello from delete')
+    const token = await AsyncStorage.getItem('token')
+    if(token!==null){
+      try{
+        const response = await fetch('http://192.168.0.101:8000/api/removeItemFromCart/'+id,{
+          method:"GET",
+          headers:{
+            "Authorization":`Bearer ${token}`
+          }
+        })
+        const resData = await response.json()
+        console.log(resData.message)
+        if(cartitems.length > 0 ){
+          getCartContent()
+        }
+        setTotal(0)
+        console.log('total from remove :',total)
+      }
+      catch(err){
+        console.log(err)
+      }
+    }
+  }
+  const clearCart = async () => {
+    const token = await AsyncStorage.getItem('token')
+    if(token !==null){
+      try{
+        const response = await fetch('http://192.168.0.101:8000/api/removeAll',{
+          method:"GET",
+          headers:{
+            "Authorization":`Bearer ${token}`
+          }
+        })
+        const resData = await response.json()
+        console.log(resData.message)
+        getCartContent()
+        setTotal(0)
+      }
+      catch(err){
+        console.log(err)
+      }
+    }
+  }
+  useEffect(() => {
+    if(isFocused){
+      getCartContent();
+    }
+  }, [isFocused]);
+  const emptycartsvg = `<svg xmlns="http://www.w3.org/2000/svg" width="244" height="204" viewBox="0 0 244 204" fill="none">
   <g clip-path="url(#clip0_128_368)">
   <path d="M11.3378 194.391C14.7223 200.677 21.9055 203.375 21.9055 203.375C21.9055 203.375 23.6013 195.882 20.2168 189.596C16.8322 183.309 9.64907 180.611 9.64907 180.611C9.64907 180.611 7.95329 188.104 11.3378 194.391Z" fill="#2F2E41"/>
   <path d="M13.6641 192.322C19.7746 196.004 22.1279 203.317 22.1279 203.317C22.1279 203.317 14.5743 204.661 8.46379 200.979C2.35333 197.297 0 189.984 0 189.984C0 189.984 7.55368 188.64 13.6641 192.322Z" fill="#11B741"/>
@@ -90,29 +178,212 @@ const ShoppingCart = () => {
   <rect width="244" height="204" fill="white"/>
   </clipPath>
   </defs>
-  </svg>`
-
-  return (
-    //if the cart is empty
-      <SafeAreaView style={{justifyContent:'center',alignItems:'center',flex:1,gap:20,backgroundColor:'#fff'}}>
+  </svg>`;
+  if (cartitems.length === 0 || cartitems.length === undefined ) {
+    return (
+      //if the cart is empty
+      <SafeAreaView
+        style={{
+          justifyContent: "center",
+          alignItems: "center",
+          flex: 1,
+          gap: 20,
+          backgroundColor: "#fff",
+        }}
+      >
+        <StatusBar style="dark" />
+        <SvgXml xml={emptycartsvg} height={180} />
+        <Text style={{ fontSize: 30, color: "#11b741", fontWeight: "500" }}>
+          Your Cart Is Empty !
+        </Text>
+        <Text
+          style={{
+            fontSize: 16,
+            width: Dimensions.get("window").width - 200,
+            textAlign: "center",
+            color: "#bababa",
+          }}
+        >
+          Looks like you haven’t added anything to your cart yet.
+        </Text>
+        <TouchableOpacity
+          style={{
+            borderColor: "#02ba5d",
+            borderWidth: 1,
+            borderRadius: 10,
+            padding: 15,
+            width: Dimensions.get("window").width - 150,
+            justifyContent: "center",
+            alignItems: "center",
+            height: 55,
+          }}
+        >
+          <Text style={{ fontWeight: "500", color: "#02ba5d" }}>
+            Check Wishlist
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            backgroundColor: "#02ba5d",
+            borderRadius: 10,
+            padding: 15,
+            width: Dimensions.get("window").width - 150,
+            justifyContent: "center",
+            alignItems: "center",
+            height: 55,
+          }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "500" }}>
+            Start Browsing
+          </Text>
+        </TouchableOpacity>
 
         <StatusBar style="dark" />
-          <SvgXml xml={emptycartsvg} height={180} />
-          <Text style={{fontSize:30,color:'#11b741',fontWeight:'500'}}>Your Cart Is Empty !</Text>
-          <Text style={{fontSize:16,width:Dimensions.get('window').width-200,textAlign:'center',color:'#bababa'}}>Looks like you haven’t added anything to your cart yet.</Text>
-          <TouchableOpacity style={{borderColor:'#02ba5d',borderWidth:1,borderRadius:10,padding:15,width:Dimensions.get('window').width-150,justifyContent:'center',alignItems:'center',height:55}}>
-            <Text style={{fontWeight:'500',color:'#02ba5d'}}>Check Wishlist</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={{backgroundColor:'#02ba5d',borderRadius:10,padding:15,width:Dimensions.get('window').width-150,justifyContent:'center',alignItems:'center',height:55}}>
-            <Text style={{color:'#fff',fontWeight:'500'}}>Start Browsing</Text>
-          </TouchableOpacity>
-          
-          
-          <StatusBar style='dark'/>
       </SafeAreaView>
-  );
+    );
+  }
+  else {
+    return (
+      <View style={styles.container}>
+        <View style={{ height: Constants.statusBarHeight }} />
+        <View style={{gap:5,flexDirection:'row',justifyContent:'flex-end',alignItems:'center',backgroundColor:"#dcdcdc",marginVertical:20,padding:10,paddingRight:20}}>
+          <Text style={{textAlign:"right",fontSize:18,fontWeight:"600",}}>Clear All</Text>
+          <Ionicons onPress={clearCart} name="trash" size={16}/>
+        </View>
+        <ScrollView>
+        <View style={styles.cartContent}>
+          {cartitems.map((c, idx) => {
+            return (
+            <>
+              <View key={idx}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    padding:10,
+                    
+                  }}
+                >
+                  <View style={{ flexDirection: "row", gap: 15, justifyContent:'center' }}>
+                    <View
+                      style={{ borderRadius: 15, overflow: "hidden", width: 80 ,justifyContent:'center' }}
+                    >
+                      <Image
+                        // source={{uri: user.profilepicture}}
+                        source={require("../images/jsyellow.png")}
+                        style={{
+                          width: 80,
+                          height: 80,
+                          backgroundColor: "#ccc",
+                        }}
+                        resizeMode="cover"
+                      />
+                    </View>
+                    <View style={{ justifyContent: "center" }}>
+                      <Text style={styles.text}>{c.title}</Text>
+                      <Text style={[styles.text,{color:"#02ba5d"}]}>${c.price}.00</Text>
+                    </View>
+                  </View>
+                  <Feather
+                  onPress={()=>deleteItemFromCart(c.id)}
+                    name="trash-2"
+                    style={{ margin:0, alignSelf: "center" }}
+                    size={20}
+                    color={'red'}
+                  />
+                </View>
+              
+              </View>
+              {idx !== cartitems.length - 1 ? <View style={{height:3,backgroundColor:"#ececec"}} /> : null}
+              </>
+            );
+          })}
+        </View>
+        <View style={{alignSelf:'center',marginBottom:30}}>
+        <LinearGradient
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  colors={["#0AB072", "#02BA5D", "#11B741"]}
+                  style={{
+                    width: Dimensions.get('window').width-40,
+                    justifyContent: "center",
+                    borderRadius: 20,
+                    marginTop:20,
+                    gap:20,
+                    paddingVertical:25
+                  }}
+                >
+                  <View style={{flexDirection:'row',justifyContent:'space-between',paddingHorizontal:15}}>
+                    <Text style={styles.textOperationsStyle}>In-Cart Items</Text>
+                    <Text style={styles.textOperationsStyle}>{cartitems.length}</Text>
+                  </View>
+                  <View style={{flexDirection:'row',justifyContent:'space-between',paddingHorizontal:15}}>
+                    <Text style={styles.textOperationsStyle}>Subtotal</Text>
+                    <Text style={styles.textOperationsStyle}>${total}.00</Text>
+                  </View>
+                  <View style={{flexDirection:'row',justifyContent:'space-between',paddingHorizontal:15}}>
+                    <Text style={styles.textOperationsStyle}>Fees</Text>
+                    <Text style={styles.textOperationsStyle}>$3.00</Text>
+                  </View>
+                  <View style={{height:3,backgroundColor:"#fff"}} />
+                  <View style={{flexDirection:'row',justifyContent:'space-between',paddingHorizontal:15}}>
+                    <Text style={styles.textOperationsStyle}>Total</Text>
+                    <Text style={styles.textOperationsStyle}>${total + 3 }.00</Text>
+                  </View>
+                </LinearGradient>
+        </View>
+        <TouchableOpacity style={styles.checkoutbtn}>
+            <Text style={styles.checkouttext}>Checkout</Text>
+        </TouchableOpacity>
+        </ScrollView>
+        
+        
+      </View>
+    );
+  }
+  
 };
 
 export default ShoppingCart;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  cartContent: {
+    borderColor: "#ececec",
+    borderWidth: 3,
+    marginHorizontal:20,
+    borderRadius: 10,
+    
+    // shadowOffset: { width: 0, height: 3 },
+    // shadowOpacity: 0.2,
+    // shadowColor: "#171717",
+  },
+  text:{
+    fontSize:18,
+    fontWeight:"600"
+  },
+  textOperationsStyle:{
+    fontSize:18,
+    color:"#fff",
+    fontWeight:"600"
+    
+  },
+  checkoutbtn:{
+    backgroundColor:"#02BA5D",
+    marginHorizontal:20,
+    justifyContent:'center',
+    alignItems:'center',
+    padding:10,
+    borderRadius:10,
+    marginBottom:25,
+    height:50
+  },
+  checkouttext:{
+    fontSize:18,
+    color:"#fff",
+    fontWeight:"500",
+    
+  }
+});

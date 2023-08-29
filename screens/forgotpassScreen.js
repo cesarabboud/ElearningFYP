@@ -52,6 +52,7 @@ const ForgotScreen = () => {
                   },
                 }}
                 keyboardType="email-address"
+                
                 //textColor="red"
               />
               <Text style={{fontSize:12}}>An Email will be sent with a password reset link.</Text>

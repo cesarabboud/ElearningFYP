@@ -119,13 +119,13 @@ const StudentsList = () => {
 
   const getAllStudents = async () => {
     try{
-      const response = await fetch('http://192.168.0.108:8000/api/getAllStudents',{
+      const response = await fetch('http://192.168.0.100:8000/api/getAllStudents',{
         method:'GET',
       })
       const resData = await response.json()
       // console.log(resData)
       setStudentList(resData.students)
-      alert(resData.studentscount)
+      //alert(resData.studentscount)
     }
     //   console.log(resData);
     //   alert('testing')

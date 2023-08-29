@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Alert, Keyboard, Pressable } from "react-native";
 
 import {
@@ -98,12 +98,11 @@ const LoginScreen = ({ navigation }) => {
       console.log('password field is empty!')
       return
     }
-    await fetch("http://192.168.0.108:8000/api/login", {
+    await fetch("http://192.168.0.101:8000/api/login", {
       method: "POST",
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        
       },
       body: JSON.stringify({
         email: email.value,
@@ -142,6 +141,12 @@ const LoginScreen = ({ navigation }) => {
       });
       
   };
+  const refinp1 = useRef(null)
+  const refinp2 = useRef(null)
+  const handleNextPress = () => {
+    if(refinp2.current)
+    refinp2.current.focus();
+  };
   return (
     <ImageBackground
       source={require("../images/startScreenBackground.png")}
@@ -155,9 +160,13 @@ const LoginScreen = ({ navigation }) => {
             <View style={{ gap: 10 }}>
               <TextInput
                 autoCapitalize='none'
-                label={/*isFilledEmail ? "Email" : "Email is required"*/ "Email"}
+                label={/*isFilledEmail ? "Email" : "Email is required"*/ "Emaill"}
                 mode="outlined"
                 style={{ width: 250, height: 40 }}
+                onSubmitEditing={handleNextPress}
+                
+                returnKeyType="next"
+                blurOnSubmit={false}
                 theme={{
                   colors: {
                     primary: "#03ba55",
@@ -169,6 +178,7 @@ const LoginScreen = ({ navigation }) => {
                     //working
                     outline: isFilledEmail ===false? "#ba1629" : "grey",
                   },
+                  
                 }}
                 keyboardType="email-address"
                 // onChangeText={handleEmail}
@@ -187,10 +197,12 @@ const LoginScreen = ({ navigation }) => {
                   secureTextEntry={true}
                   label="Password"
                   mode="outlined"
-                  
                   style={{ width: 250, height: 40 }}
                   value={password.value}
-                  
+                  ref={refinp2}
+                  returnKeyType="done"
+                  onSubmitEditing={()=>Keyboard.dismiss()}
+                  blurOnSubmit={false}
                   theme={{
                     colors: {
                       primary: "#03ba55",
@@ -231,7 +243,7 @@ const LoginScreen = ({ navigation }) => {
                     containerStyle={{ borderWidth: 0, margin: 0, padding: 0,backgroundColor:"#fff" }}
                     textStyle={{ borderWidth: 0, margin: 0, padding: 0 }}
                   />
-                  <TouchableOpacity onPress={()=>navigation.navigate("AdminTab")}>
+                  <TouchableOpacity onPress={()=>navigation.navigate("Search2")}>
                     <Text>Forgot password?</Text>
                   </TouchableOpacity>
                   
