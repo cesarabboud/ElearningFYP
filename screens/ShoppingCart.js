@@ -18,7 +18,7 @@ import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { IconButton } from "react-native-paper";
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 const ShoppingCart = () => {
   const [cartitems, setCartItems] = useState([]);
   const [total,setTotal] = useState(0)
@@ -28,7 +28,7 @@ const ShoppingCart = () => {
     if (token !== null) {
       try {
         const response = await fetch(
-          "http://192.168.0.101:8000/api/displayCart",
+          "http://192.168.0.106:8000/api/displayCart",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -60,7 +60,7 @@ const ShoppingCart = () => {
     const token = await AsyncStorage.getItem('token')
     if(token!==null){
       try{
-        const response = await fetch('http://192.168.0.101:8000/api/removeItemFromCart/'+id,{
+        const response = await fetch('http://192.168.0.106:8000/api/removeItemFromCart/'+id,{
           method:"GET",
           headers:{
             "Authorization":`Bearer ${token}`
@@ -83,7 +83,7 @@ const ShoppingCart = () => {
     const token = await AsyncStorage.getItem('token')
     if(token !==null){
       try{
-        const response = await fetch('http://192.168.0.101:8000/api/removeAll',{
+        const response = await fetch('http://192.168.0.106:8000/api/removeAll',{
           method:"GET",
           headers:{
             "Authorization":`Bearer ${token}`
@@ -98,6 +98,12 @@ const ShoppingCart = () => {
         console.log(err)
       }
     }
+  }
+  const navigation = useNavigation()
+  const goToCheckout = () =>{
+    navigation.navigate("CheckoutPayment",{
+      total:total
+    })
   }
   useEffect(() => {
     if(isFocused){
@@ -332,7 +338,7 @@ const ShoppingCart = () => {
                   </View>
                 </LinearGradient>
         </View>
-        <TouchableOpacity style={styles.checkoutbtn}>
+        <TouchableOpacity onPress={goToCheckout} style={styles.checkoutbtn}>
             <Text style={styles.checkouttext}>Checkout</Text>
         </TouchableOpacity>
         </ScrollView>

@@ -53,6 +53,7 @@ import ActionsWithPDF from "./screens/ActionsWithPDF";
 import QuestionsAnswers from "./screens/QuestionsAnswers";
 import { SvgXml } from "react-native-svg";
 import Search2 from './screens/Search2'
+import CheckoutPayment from './screens/CheckoutPayment'
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -421,6 +422,7 @@ const App = ({ navigation }) => {
         <Stack.Screen name="MyWebComponent" component={MyWebComponent} />
         <Stack.Screen name="Actions" component={ActionsWithPDF} />
         <Stack.Screen name="Search2" component={Search2} />
+        <Stack.Screen name="CheckoutPayment" component={CheckoutPayment} />
       </Stack.Navigator>
     </NavigationContainer>
   );

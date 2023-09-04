@@ -15,25 +15,30 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { IconButton } from "react-native-paper";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { defaultFormat } from "moment";
 const CourseDetails = ({route}) => {
-  const {courseId} = route.params
+  const {courseId,cat} = route.params
+  // console.log(cat + courseId)
   const [course,setCourse] = useState({})
   const [nbrev,setNbrev] = useState(0)
   const DetailsDeCours = async () =>{
       const token = await AsyncStorage.getItem('token')
       if(token!==null){
         try{
-          const response = await fetch('http://192.168.0.101:8000/api/courseDetails/'+courseId,{
+          const response = await fetch('http://192.168.0.106:8000/api/courseDetails/'+courseId,{
             method:"GET",
             headers:{
               "Authorization":`Bearer ${token}`
             }
           })
           const resData = await response.json()
-          console.log(resData)
+          // console.log(resData.course)
+          // console.log(resData.course.get_category.name)
           setCourse(resData.course)
+          // console.log('course cat :',course.get_category.name)
+          // console.log(resData.course.get_category.name)
           setNbrev(resData.nbrev)
-          console.log(course)
+          
         }
         catch(err){
           console.log(err)
@@ -71,7 +76,7 @@ const CourseDetails = ({route}) => {
             fontSize: 14,
           }}
         >
-          Category{/* {course.get_category.name} */}
+        {/* {course.get_category.name} */}{cat}
         </Text>
         <Text style={{ fontWeight: "600", fontSize: 16, fontWeight: "600" }}>
           {course.title}
@@ -235,7 +240,9 @@ const CourseDetails = ({route}) => {
         </TouchableOpacity>
         <View style={{ height: 1, backgroundColor: "#ccc" }} />
         <TouchableOpacity
-          onPress={() => navigation.navigate("AddReview")}
+          onPress={() => navigation.navigate("AddReview",{
+            id:courseId
+          })}
           style={{
             justifyContent: "space-between",
             flexDirection: "row",
@@ -271,7 +278,7 @@ const CourseDetails = ({route}) => {
               marginLeft: 15,
             }}
           >
-            $80.00
+            ${course.price}.00
           </Text>
           <TouchableOpacity
             activeOpacity={0.7}
@@ -325,7 +332,7 @@ const CourseDetailsExport = () => {
       <Stack.Screen
         name="CourseDetails"
         component={CourseDetails}
-        initialParams={{courseId : route.params.cid}}
+        initialParams={{courseId : route.params.cid, cat:route.params.cat}}
         options={{
           headerLeft: () => <CourseDetailsCustomComponent />,
           headerShown: true,

@@ -32,7 +32,7 @@ export default function InstructorProfile() {
   const getLoggedInUserDetails = async () =>{
     const token = await AsyncStorage.getItem('token')
     try{
-      const response = await fetch("http://192.168.0.101:8000/api/getLoggedInUserDetails",{
+      const response = await fetch("http://192.168.0.106:8000/api/getLoggedInUserDetails",{
         method:"GET",
         headers:{
           "Accept": 'application/json',
@@ -68,7 +68,7 @@ export default function InstructorProfile() {
   const handleLogout = async () =>{
     const val = await AsyncStorage.getItem('token')
     try{
-      const response = await fetch('http://192.168.0.101:8000/api/logout',{
+      const response = await fetch('http://192.168.0.106:8000/api/logout',{
         method: 'POST',
         headers:{
           "Accept": 'application/json',

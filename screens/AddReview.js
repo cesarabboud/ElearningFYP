@@ -15,13 +15,17 @@ import {
 } from "react-native";
 import { IconButton } from "react-native-paper";
 import React, { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect } from "react";
+import { useNavigation } from "@react-navigation/native";
 const width = Dimensions.get("window").width;
 
-const AddReview = () => {
+const AddReview = ({route}) => {
   const [text, setText] = useState("");
-
+  const {id} = route.params
+  console.log('id:',id)
   const characterLimit = 300;
-
+  const [msg,setMsg] = useState('')
   const handleTextChange = (newText) => {
     if (newText.length <= characterLimit) {
       setText(newText);
@@ -42,8 +46,62 @@ const AddReview = () => {
   const handleCloseModal = () => {
     setModalVisible(false);
   };
-  return (
-    <ScrollView>
+  const CheckIfPurchased = async () => {
+    const token = await AsyncStorage.getItem('token')
+    if(token !==null) {
+      try{
+        const response = await fetch('http://192.168.0.106:8000/api/canReview/'+id,{
+          method:'GET',
+          headers:{
+            'Authorization':`Bearer ${token}`
+          }
+        })
+        const resData = await response.json()
+        // console.log(resData.message)
+        setMsg(resData.message)
+        console.log(msg)
+      }
+      catch(err){
+        console.log(err)
+      }
+    }
+  }
+  useEffect(()=>{
+    CheckIfPurchased()
+  },[])
+  const navigation = useNavigation()
+  const addItemToCart = async (id) => {
+    const token = await AsyncStorage.getItem('token')
+    
+    if(token !== null){
+        try{
+            const response = await fetch('http://192.168.0.106:8000/api/addItemToCart/'+id,{
+                method:"POST",
+                headers:{
+                    "Authorization":`Bearer ${token}`
+                }
+            })
+            const resData = await response.json()
+            console.log(resData.message)
+            if(resData.message!== 'item already in cart!'){
+                navigation.replace('BottomTab', { screen: 'ShoppingCart' });
+                return
+            }
+        }
+        catch(err){
+            console.log(err)
+        }
+    }
+  }
+  const UnownedComponent = () => {
+    return <View style={styles.container}>
+      <Text>You Cannot Review This Course Unless You Buy It.</Text>
+      <Button title="Add Course To Cart" onPress={()=>addItemToCart(id)} />
+    </View>
+  }
+  const RegularComponent = () => {
+    return (
+      <ScrollView>
 
     
     <TouchableWithoutFeedback onPress={() => {Keyboard.dismiss(); handleStarPress(0)}}>
@@ -150,6 +208,14 @@ const AddReview = () => {
       </View>
     </TouchableWithoutFeedback>
     </ScrollView>
+    )
+  }
+  return (
+    <>
+    {
+      msg === 'owned' ? <RegularComponent /> : <UnownedComponent />
+    }
+    </>
   );
 };
 
@@ -220,4 +286,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textTransform:'uppercase'
   },
+  container:{
+    flex:1,
+    justifyContent:'center',
+    alignItems:'center'
+  }
 });

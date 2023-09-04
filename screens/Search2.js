@@ -18,7 +18,7 @@ const App = () => {
     const token = await AsyncStorage.getItem('token');
     if (token !== null) {
       try {
-        const response = await fetch('http://192.168.0.101:8000/api/allCourses', {
+        const response = await fetch('http://192.168.0.106:8000/api/allCourses', {
           method: 'GET'
         });
         const resData = await response.json();
@@ -33,7 +33,7 @@ const App = () => {
     const token = await AsyncStorage.getItem('token')
     if(token !== null){
         try{
-            const response = await fetch('http://192.168.0.101:8000/api/addItemToCart/'+id,{
+            const response = await fetch('http://192.168.0.106:8000/api/addItemToCart/'+id,{
                 method:"POST",
                 headers:{
                     "Authorization":`Bearer ${token}`
@@ -60,7 +60,8 @@ const App = () => {
     return (
       <View style={styles.itemContainer}>
         <TouchableWithoutFeedback onPress={()=>navigation.navigate("CourseDetails",{
-            cid:item.id
+            cid:item.id,
+            cat:item.get_category.name
         })}>
         <View style={{ width: '100%', borderTopLeftRadius: 10, borderTopRightRadius: 10, overflow: 'hidden' }}>
           <Image style={{ width: '100%', height: 140 }} source={require('../images/jsyellow.png')} />

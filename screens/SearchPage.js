@@ -22,6 +22,7 @@ import BottomSheetSearchFilter from './BottomSheetSearchFilter'
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect } from "react";
 import Search2 from './Search2'
+import { useIsFocused } from "@react-navigation/native";
 let cnt=1, cnt2=0, catCnt=0;
 const ScreenWidth = Dimensions.get('screen').width
 const categories = [
@@ -57,16 +58,15 @@ const SearchBar = () => {
     setSelectedCategory(category.id);
   };
 
-
+  const [cat,setCat] = useState([])
 
 
 
   const GetCategories = async () =>{
     const token = await AsyncStorage.getItem('token')
-    console.log(token)
     if(token !==null){
       try{
-        const response = await fetch('http://192.168.0.101:8000/api/allCategories',{
+        const response = await fetch('http://192.168.0.106:8000/api/allCategories',{
           method:'GET',
           headers:{
             "Accept": 'application/json',
@@ -74,17 +74,25 @@ const SearchBar = () => {
             "Authorization":`Bearer ${token}`
           }
         })
-        const resData = await response.json()
-        console.log(resData.categories)
+        .then((res) => res.json())
+      .then((resData) => {
+        console.log("response data is:",JSON.stringify(resData))
+        setCat(resData.categories)
+        console.log(cat)
+      })
       }
       catch(err){
         console.log(err)
       }
     }
   }
+  const isFocused = useIsFocused()
   useEffect(()=>{
-    GetCategories()
-  },[])
+    if(isFocused){
+      GetCategories()
+    }
+    
+  },[isFocused])
   //----------------
   const handleSearchTextChange = (text) => {
     setSearchText(text);
@@ -233,7 +241,7 @@ const SearchBar = () => {
                 columnGap:10
               }}
             >
-              {categories2.map((category) => (
+              {cat.map((category) => (
                 <TouchableOpacity
                   key={category.id}
                   onPress={() => handleCategoryPress(category)}

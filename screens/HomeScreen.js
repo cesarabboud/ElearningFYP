@@ -22,9 +22,10 @@ const HomeScreen = ({route}) => {
   // const [currentTime, setCurrentTime] = useState("");
   const [cat,setCat] = useState([])
   const [topRated,setTopRated] = useState([])
+  const [uname,setUname] = useState('')
   const getHomeScrData = async () =>{
     const token = await AsyncStorage.getItem('token')
-    const response = await fetch('http://192.168.0.101:8000/api/HomeScr',{
+    const response = await fetch('http://192.168.0.106:8000/api/HomeScr',{
       headers:{
         "Authorization":`Bearer ${token}`
       }
@@ -34,6 +35,7 @@ const HomeScreen = ({route}) => {
     setCat(resData.categories)
     setTopRated(resData.topRated)
     console.log(topRated.length)
+    setUname(resData.uname)
   }
   useEffect(()=>{
     getHomeScrData()
@@ -68,7 +70,7 @@ const HomeScreen = ({route}) => {
       setCurrentIndex(index);
     }
   };*/
-  const {uname,usertoken} = route.params
+  
   const navigation = useNavigation();
   return (
     <ImageBackground
@@ -129,7 +131,7 @@ const HomeScreen = ({route}) => {
             >
               {/* <Text style={{ fontWeight: "500" }}>{currentTime}</Text> */}
               <TouchableOpacity
-                onPress={() => navigation.navigate("Studentprofile",{usertoken:usertoken})}
+                onPress={() => navigation.navigate("Studentprofile")}
               >
                 <SvgXml xml={profileSvg} style={{ marginRight: 15 }} />
               </TouchableOpacity>
@@ -258,7 +260,7 @@ const HomeScreen = ({route}) => {
             {
               topRated.map((tr,idx)=>{
                 return(
-                  <Text>{idx + 1}) {tr.title} Rating: {tr.rating}/5</Text>
+                  <Text key={idx}>{idx + 1}) {tr.title} Rating: {tr.rating}/5</Text>
                 )
                 
               })

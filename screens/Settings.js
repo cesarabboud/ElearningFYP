@@ -36,7 +36,7 @@ const Settings = () => {
       // clear error
     }
   
-    console.log('Done.')
+    console.log('Async Storage Cleared !!')
   }
 
   const DeleteAcc = () =>{

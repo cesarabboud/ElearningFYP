@@ -6,29 +6,183 @@ import {
   View,
   TextInput,
   StatusBar,
-  ScrollView
+  ScrollView,
+  Button,
+  Image
 } from "react-native";
-import Slider from 'react-native-slider'
-import React,{useState} from "react";
+import Slider from "react-native-slider";
+import DropDownPicker from "react-native-dropdown-picker";
+import React, { useState,useEffect } from "react";
+import { useIsFocused } from "@react-navigation/native";
 import { IconButton } from "react-native-paper";
-
+import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker'
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const UploadCourse = () => {
-    const [value, setValue] = useState('');
-    const [price, setPrice] = useState(50);
+  const [value, setValue] = useState("");
+  const [price, setPrice] = useState(50);
+  const [open, setOpen] = useState(false);
+  const [title,setTitle] = useState('')
+  const [desc,setDesc] = useState('')
+  const [category,setcategory] = useState('')
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [image, setImage] = useState(null);
 
-    const handlePriceChange = (value) => {
-      setPrice(value);
-    };
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+
+
+  const pickDocument = async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: "*/*",
+    });
+
+    if (result.type === "success") {
+      setSelectedFile(result);
+    }
+  };
+  const [cat,setCat] = useState([])
+
+
+  const [catDisplay,setCatDisplay] = useState([])
+  const GetCategories = async () =>{
+    const token = await AsyncStorage.getItem('token')
+    if(token !==null){
+      try{
+        const response = await fetch('http://192.168.0.106:8000/api/allCategories',{
+          method:'GET',
+          headers:{
+            "Accept": 'application/json',
+            "Content-Type": "application/json",
+            "Authorization":`Bearer ${token}`
+          }
+        })
+        .then((res) => res.json())
+      .then((resData) => {
+        setCat(resData.categories)
+        console.log('cat:',cat)
+        const newArray = cat.map((item) => {
+          return {
+            label: item.name,
+            value: item.name,
+            };
+          });
+          console.log(newArray.length)
+          setCatDisplay(newArray);
+          console.log(catDisplay)
+          console.log(category)
+      })
+      }
+      catch(err){
+        console.log(err)
+      }
+    }
+  }
+  const isFocused = useIsFocused()
+  useEffect(()=>{
+    if(isFocused){
+      GetCategories()
+    }
+    
+  },[isFocused])
+  const uploadDocument = async () => {
+    const formData = new FormData();
+    formData.append("myfile", {
+      uri: selectedFile.uri,
+      type: "application/" + getFileExtension(selectedFile.uri),
+      name: `document.${getFileExtension(selectedFile.uri)}`,
+    });
+    // var jsonBlob = new Blob([JSON.stringify(jsonData)],{
+    //   type:'application/json'
+    // })
+    // formData.append('json', jsonBlob, 'data.json');
+    formData.append('image', {
+      uri: image,
+      type: 'image/jpeg',
+      name: 'myImage.jpg',
+    });
+    formData.append('title','titre en fr')
+    formData.append('thumbnail','thumb')
+    formData.append("description",'static description')
+    formData.append('size',selectedFile !== null ? selectedFile.size / (1024*1024) : 0,)
+    formData.append("type",selectedFile !== null ? getFileExtension(selectedFile.uri) : '')
+    formData.append("price",price)
+    formData.append("category",category)
+    
+    const response = await fetch("http://192.168.0.106:8000/api/uploadPDF", {
+      method: "POST",
+      body: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    const resData = await response.json();
+    console.log(resData);
+  };
+  const getFileExtension = (filename) => {
+    return filename.split(".").pop();
+  };
+  const handlePriceChange = (value) => {
+    setPrice(value);
+  };
   const handleTextChange = (text) => {
     // Remove non-numeric characters from the input
-    const numericValue = text.replace(/[^0-9]/g, '');
-    
+    const numericValue = text.replace(/[^0-9]/g, "");
+
     const limitedValue = numericValue.slice(0, 3);
     setValue(limitedValue);
   };
+  function formatFileSize(bytes, decimalPoint) {
+    if (bytes == 0) return '0 Bytes';
+    const k = 1024;
+    const dm = decimalPoint || 2;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  }
+  
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle={'dark-content'} />
+    <ScrollView contentContainerStyle={styles.container}>
+      <StatusBar barStyle={"dark-content"} />
+
+      {image !==null ? <Image source={{ uri: image }} style={styles.image} />
+      : <TouchableOpacity
+      style={{
+        borderWidth: 1,
+        borderRadius: 10,
+        borderColor: "#fff",
+        width: "70%",
+        height: 150,
+        justifyContent: "center",
+        alignItems: "center",
+
+        marginTop: 15,
+      }}
+      onPress={pickImage}
+    >
+      <IconButton
+        icon={"cloud-upload-outline"}
+        iconColor="#fff"
+        size={50}
+        style={{ margin: -5 }}
+      />
+      <Text style={{ color: "#fff", fontSize: 20 }}>Upload Image</Text>
+    </TouchableOpacity>
+
+    }
+      
       <TouchableOpacity
         style={{
           borderWidth: 1,
@@ -38,9 +192,10 @@ const UploadCourse = () => {
           height: 150,
           justifyContent: "center",
           alignItems: "center",
-          
-          marginTop:10
+
+          marginTop: 15,
         }}
+        onPress={pickDocument}
       >
         <IconButton
           icon={"cloud-upload-outline"}
@@ -62,16 +217,21 @@ const UploadCourse = () => {
             fontSize: 18,
           }}
         />
-        <TextInput
-          placeholder="Course Name"
-          placeholderTextColor="grey"
-          style={{
-            height: 45,
-            backgroundColor: "#f5f5f5",
-            borderRadius: 5,
-            padding: 15,
-            fontSize: 18,
+        <DropDownPicker
+        open={open}
+        value={value}
+        items={catDisplay}
+        onChangeValue={(value) => {
+          setcategory(value)
+          console.log('cat' + category)
           }}
+        setOpen={setOpen}
+        setValue={setValue}
+        setItems={setCatDisplay}
+        style={styles.drops}
+        dropDownContainerStyle={styles.dropItem}
+        placeholder={'Category'}
+        placeholderStyle={{ fontSize: 16, fontWeight: "600", paddingLeft: 10,}}
         />
         <View style={styles.textAreaContainer}>
           <TextInput
@@ -100,24 +260,48 @@ const UploadCourse = () => {
           }}
         /> */}
         <Slider
-        
-        minimumValue={50}
-        maximumValue={1000}
-        value={price}
-        onValueChange={handlePriceChange}
-        thumbTintColor="#03ba55"
-        minimumTrackTintColor="#03ba55"
-        maximumTrackTintColor="#ccc"
-        
-        step={1}
-        
-      />
-      <Text style={{color:'#fff',fontSize:16,textAlign:'center'}}>Price: ${price}</Text>
+          minimumValue={50}
+          maximumValue={500}
+          value={price}
+          onValueChange={handlePriceChange}
+          thumbTintColor="#03ba55"
+          minimumTrackTintColor="#03ba55"
+          maximumTrackTintColor="#ccc"
+          step={1}
+        />
+        <Text style={{ color: "#fff", fontSize: 16, textAlign: "center" }}>
+          Price: ${price}
+        </Text>
       </View>
-      <TouchableOpacity style={{backgroundColor:'#11b741',padding:10,width:'70%',borderRadius:5,marginTop:30}}>
-        <Text style={{fontSize:18,alignSelf:'center',fontWeight:'500',textTransform:'uppercase'}}>Upload</Text>
+      <TouchableOpacity
+        style={{
+          backgroundColor: "#11b741",
+          padding: 10,
+          width: "70%",
+          borderRadius: 5,
+          marginTop: 30,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 18,
+            alignSelf: "center",
+            fontWeight: "500",
+            textTransform: "uppercase",
+          }}
+        >
+          Upload
+        </Text>
       </TouchableOpacity>
-    </SafeAreaView>
+      {selectedFile && (
+        <>
+        <Button title="Uploadd PDF" onPress={uploadDocument} />
+        <Text>{selectedFile.uri}</Text>
+        <Text>{getFileExtension(selectedFile.uri)}</Text>
+        <Text>{formatFileSize(selectedFile.size,2)}</Text>
+        </>
+      )}
+    </ScrollView>
   );
 };
 
@@ -125,7 +309,6 @@ export default UploadCourse;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: "center",
     backgroundColor: "#1e2a23",
     gap: 15,
@@ -142,5 +325,16 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     fontSize: 18,
     padding: 10,
+  },
+  dropItem: {
+    color: "#131313",
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  image: {
+    width: "70%",
+    height: 150,
+    marginTop: 20,
+    borderRadius:10
   },
 });
