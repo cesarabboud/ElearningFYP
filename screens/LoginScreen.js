@@ -98,7 +98,7 @@ const LoginScreen = ({ navigation }) => {
       console.log('password field is empty!')
       return
     }
-    await fetch("http://192.168.0.106:8000/api/login", {
+    await fetch("http://192.168.0.105:8000/api/login", {
       method: "POST",
       headers: {
         "Accept": "application/json",
@@ -243,7 +243,7 @@ const LoginScreen = ({ navigation }) => {
                     containerStyle={{ borderWidth: 0, margin: 0, padding: 0,backgroundColor:"#fff" }}
                     textStyle={{ borderWidth: 0, margin: 0, padding: 0 }}
                   />
-                  <TouchableOpacity onPress={()=>navigation.navigate("Search2")}>
+                  <TouchableOpacity onPress={()=>navigation.navigate("MyWebComponent")}>
                     <Text>Forgot password?</Text>
                   </TouchableOpacity>
                   

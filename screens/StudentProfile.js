@@ -35,7 +35,7 @@ const  StudentProfile = () => {
   const getLoggedInUserDetails = async () =>{
     const val = await AsyncStorage.getItem('token')
     try{
-      const response = await fetch("http://192.168.0.106:8000/api/getLoggedInUserDetails",{
+      const response = await fetch("http://192.168.0.105:8000/api/getLoggedInUserDetails",{
         method:"GET",
         headers:{
           "Accept": 'application/json',
@@ -71,7 +71,7 @@ const  StudentProfile = () => {
   const handleLogout = async () =>{
     try{
       const val = await AsyncStorage.getItem('token')
-      const response = await fetch('http://192.168.0.106:8000/api/logout',{
+      const response = await fetch('http://192.168.0.105:8000/api/logout',{
         method: 'POST',
         headers:{
           "Accept": 'application/json',
@@ -126,7 +126,7 @@ const  StudentProfile = () => {
         >
           <View style={{ borderRadius: "100", overflow: "hidden" }}>
             <Image
-            source={{uri: user.profilepicture}}
+            source={{uri: 'http://192.168.0.105:8000/'+user.profilepicture}}
                //source={require("../images/profilepic.jpg")}
               style={{ width: 100, height: 100,backgroundColor:'#ccc' }}
               resizeMode='cover'
@@ -381,13 +381,13 @@ const  StudentProfile = () => {
                   alignSelf: "flex-end",
                 }}
               />
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <TouchableOpacity onPress={()=>navigation.navigate("MyCourses")} style={{ flexDirection: "row", alignItems: "center" }}>
                 <TouchableOpacity>
                   <IconButton icon="cart-outline" iconColor="#000" />
                 </TouchableOpacity>
 
                 <Text>My Courses</Text>
-              </View>
+              </TouchableOpacity>
               <View
                 style={{
                   width: ScreenWidth - 75,

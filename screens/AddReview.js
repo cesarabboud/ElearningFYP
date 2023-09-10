@@ -17,15 +17,15 @@ import { IconButton } from "react-native-paper";
 import React, { useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect } from "react";
-import { useNavigation } from "@react-navigation/native";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 const width = Dimensions.get("window").width;
 
 const AddReview = ({route}) => {
   const [text, setText] = useState("");
-  const {id} = route.params
-  console.log('id:',id)
+  const {id,course} = route.params
+  console.log(id)
   const characterLimit = 300;
-  const [msg,setMsg] = useState('')
+  const [isOwned,setIsOwned] = useState(false)
   const handleTextChange = (newText) => {
     if (newText.length <= characterLimit) {
       setText(newText);
@@ -50,7 +50,7 @@ const AddReview = ({route}) => {
     const token = await AsyncStorage.getItem('token')
     if(token !==null) {
       try{
-        const response = await fetch('http://192.168.0.106:8000/api/canReview/'+id,{
+        const response = await fetch('http://192.168.0.105:8000/api/canReview/'+id,{
           method:'GET',
           headers:{
             'Authorization':`Bearer ${token}`
@@ -58,14 +58,15 @@ const AddReview = ({route}) => {
         })
         const resData = await response.json()
         // console.log(resData.message)
-        setMsg(resData.message)
-        console.log(msg)
+        resData.message === 'owned' ? setIsOwned(true) : null
+        console.log(isOwned)
       }
       catch(err){
         console.log(err)
       }
     }
   }
+  const isFocused = useIsFocused()
   useEffect(()=>{
     CheckIfPurchased()
   },[])
@@ -75,7 +76,7 @@ const AddReview = ({route}) => {
     
     if(token !== null){
         try{
-            const response = await fetch('http://192.168.0.106:8000/api/addItemToCart/'+id,{
+            const response = await fetch('http://192.168.0.105:8000/api/addItemToCart/'+id,{
                 method:"POST",
                 headers:{
                     "Authorization":`Bearer ${token}`
@@ -108,17 +109,16 @@ const AddReview = ({route}) => {
       <View style={{ backgroundColor: "#fff", flex: 1 }}>
         <View style={{ flexDirection: "row", gap: 15, marginHorizontal: 30,marginVertical:20 }}>
           <Image
-            source={require("../images/jsyellow.png")}
+            source={{uri: 'http://192.168.0.105:8000/'+course.thumbnail}}
             style={{ width: 120, height: 120, borderRadius: 7 }}
           />
           <View style={{ width: width - 200, gap: 5, height: "100%" }}>
             <Text style={{ fontSize: 18, fontWeight: "600" }}>
-              Learn JS in 30 Days
+              
+              {course.title}
             </Text>
             <Text style={{ color: "#959595", fontSize: 14 }}>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem
-              ipsum dolor sit amet
+              {course.description}
             </Text>
           </View>
         </View>
@@ -211,12 +211,8 @@ const AddReview = ({route}) => {
     )
   }
   return (
-    <>
-    {
-      msg === 'owned' ? <RegularComponent /> : <UnownedComponent />
-    }
-    </>
-  );
+    isOwned ? <RegularComponent /> : <UnownedComponent />
+  )
 };
 
 export default AddReview;

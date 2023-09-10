@@ -13,6 +13,7 @@
     "@config-plugins/react-native-pdf": "^5.0.0",
     "@expo/vector-icons": "^13.0.0",
     "@expo/webpack-config": "^18.0.1",
+    "@ptomasroos/react-native-multi-slider": "^2.2.2",
     "@react-native-async-storage/async-storage": "1.17.11",
     "@react-navigation/bottom-tabs": "^6.5.8",
     "@react-navigation/native": "^6.1.6",
@@ -23,6 +24,7 @@
     "expo-asset": "~8.9.1",
     "expo-av": "~13.2.1",
     "expo-constants": "~14.2.1",
+    "expo-document-picker": "~11.2.2",
     "expo-file-system": "~15.2.2",
     "expo-filedownload": "^1.0.10",
     "expo-image-picker": "^14.3.1",
@@ -56,8 +58,7 @@
     "react-native-vector-icons": "^9.2.0",
     "react-native-web": "~0.18.10",
     "react-native-webview": "^11.26.0",
-    "typescript": "^4.9.4",
-    "expo-document-picker": "~11.2.2"
+    "typescript": "^4.9.4"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

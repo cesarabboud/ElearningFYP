@@ -8,26 +8,28 @@ import {
   StatusBar,
   ScrollView,
   Button,
-  Image
+  Image,
 } from "react-native";
 import Slider from "react-native-slider";
 import DropDownPicker from "react-native-dropdown-picker";
-import React, { useState,useEffect } from "react";
-import { useIsFocused } from "@react-navigation/native";
+import React, { useState, useEffect } from "react";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { IconButton } from "react-native-paper";
-import * as DocumentPicker from 'expo-document-picker';
-import * as ImagePicker from 'expo-image-picker'
+import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ResizeMode, Video } from "expo-av";
 const UploadCourse = () => {
   const [value, setValue] = useState("");
   const [price, setPrice] = useState(50);
   const [open, setOpen] = useState(false);
-  const [title,setTitle] = useState('')
-  const [desc,setDesc] = useState('')
-  const [category,setcategory] = useState('')
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
+  const [category, setcategory] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [image, setImage] = useState(null);
-
+  const [courseName, setCourseName] = useState("");
+  const [courseDesc, setCourseDesc] = useState("");
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -39,10 +41,9 @@ const UploadCourse = () => {
 
     if (!result.canceled) {
       setImage(result.assets[0].uri);
+      //console.log('ext:',getFileExtension(image))
     }
   };
-
-
 
   const pickDocument = async () => {
     const result = await DocumentPicker.getDocumentAsync({
@@ -53,83 +54,112 @@ const UploadCourse = () => {
       setSelectedFile(result);
     }
   };
-  const [cat,setCat] = useState([])
+  const [cat, setCat] = useState([]);
 
-
-  const [catDisplay,setCatDisplay] = useState([])
-  const GetCategories = async () =>{
-    const token = await AsyncStorage.getItem('token')
-    if(token !==null){
-      try{
-        const response = await fetch('http://192.168.0.106:8000/api/allCategories',{
-          method:'GET',
-          headers:{
-            "Accept": 'application/json',
-            "Content-Type": "application/json",
-            "Authorization":`Bearer ${token}`
+  const [catDisplay, setCatDisplay] = useState([]);
+  const GetCategories = async () => {
+    const token = await AsyncStorage.getItem("token");
+    if (token !== null) {
+      try {
+        const response = await fetch(
+          "http://192.168.0.105:8000/api/allCategories",
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
           }
-        })
-        .then((res) => res.json())
-      .then((resData) => {
-        setCat(resData.categories)
-        console.log('cat:',cat)
-        const newArray = cat.map((item) => {
-          return {
-            label: item.name,
-            value: item.name,
-            };
+        )
+          .then((res) => res.json())
+          .then((resData) => {
+            setCat(resData.categories);
+            console.log("cat:", cat);
+            const newArray = cat.map((item,idx) => {
+              return {
+                label: item,
+                value: item,
+              };
+            });
+            console.log(newArray.length);
+            setCatDisplay(newArray);
+            console.log(catDisplay);
+            console.log(category);
           });
-          console.log(newArray.length)
-          setCatDisplay(newArray);
-          console.log(catDisplay)
-          console.log(category)
-      })
-      }
-      catch(err){
-        console.log(err)
+      } catch (err) {
+        console.log(err);
       }
     }
-  }
-  const isFocused = useIsFocused()
-  useEffect(()=>{
-    if(isFocused){
-      GetCategories()
+  };
+  const isFocused = useIsFocused();
+  useEffect(() => {
+    if (isFocused) {
+      GetCategories();
     }
-    
-  },[isFocused])
+  }, [isFocused]);
+  const navigation = useNavigation()
   const uploadDocument = async () => {
-    const formData = new FormData();
-    formData.append("myfile", {
-      uri: selectedFile.uri,
-      type: "application/" + getFileExtension(selectedFile.uri),
-      name: `document.${getFileExtension(selectedFile.uri)}`,
-    });
-    // var jsonBlob = new Blob([JSON.stringify(jsonData)],{
-    //   type:'application/json'
-    // })
-    // formData.append('json', jsonBlob, 'data.json');
-    formData.append('image', {
-      uri: image,
-      type: 'image/jpeg',
-      name: 'myImage.jpg',
-    });
-    formData.append('title','titre en fr')
-    formData.append('thumbnail','thumb')
-    formData.append("description",'static description')
-    formData.append('size',selectedFile !== null ? selectedFile.size / (1024*1024) : 0,)
-    formData.append("type",selectedFile !== null ? getFileExtension(selectedFile.uri) : '')
-    formData.append("price",price)
-    formData.append("category",category)
-    
-    const response = await fetch("http://192.168.0.106:8000/api/uploadPDF", {
-      method: "POST",
-      body: formData,
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    const resData = await response.json();
-    console.log(resData);
+    if (
+      selectedFile === null ||
+      courseDesc === "" ||
+      courseName === "" ||
+      image === null ||
+      category === ""
+    ) {
+      alert("please fill all the fields");
+      return;
+    }
+    const token = await AsyncStorage.getItem("token");
+    if (token !== null) {
+      try {
+        const formData = new FormData();
+        formData.append("myfile", {
+          uri: selectedFile.uri,
+          type: "application/" + getFileExtension(selectedFile.uri),
+          name: `document.${getFileExtension(selectedFile.uri)}`,
+        });
+        // var jsonBlob = new Blob([JSON.stringify(jsonData)],{
+        //   type:'application/json'
+        // })
+        // formData.append('json', jsonBlob, 'data.json');
+        formData.append("image", {
+          uri: image,
+          type: "image/" + getFileExtension(image),
+          name: "myImage.jpg",
+        });
+        formData.append("title", courseName);
+        formData.append("description", courseDesc);
+        formData.append(
+          "size",
+          selectedFile !== null ? selectedFile.size / (1024 * 1024) : 0
+        );
+        formData.append(
+          "type",
+          selectedFile !== null ? getFileExtension(selectedFile.uri) : ""
+        );
+        formData.append("price", price);
+        formData.append("category", category);
+
+        const response = await fetch(
+          "http://192.168.0.105:8000/api/uploadPDF",
+          {
+            method: "POST",
+            body: formData,
+            headers: {
+              "Authorization": `Bearer ${token}`,
+            },
+          }
+        );
+        const resData = await response.json();
+        console.log(resData);
+        // alert("Course Uploaded !");
+        navigation.replace("InstructorProfile")
+        
+      } catch (err) {
+        console.log(err);
+      }
+    }
   };
   const getFileExtension = (filename) => {
     return filename.split(".").pop();
@@ -145,69 +175,98 @@ const UploadCourse = () => {
     setValue(limitedValue);
   };
   function formatFileSize(bytes, decimalPoint) {
-    if (bytes == 0) return '0 Bytes';
+    if (bytes == 0) return "0 Bytes";
     const k = 1024;
     const dm = decimalPoint || 2;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
   }
-  
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <StatusBar barStyle={"dark-content"} />
 
-      {image !==null ? <Image source={{ uri: image }} style={styles.image} />
-      : <TouchableOpacity
-      style={{
-        borderWidth: 1,
-        borderRadius: 10,
-        borderColor: "#fff",
-        width: "70%",
-        height: 150,
-        justifyContent: "center",
-        alignItems: "center",
+      {image !== null ? (
+        <Image source={{ uri: image }} style={styles.image} />
+      ) : (
+        <TouchableOpacity
+          style={{
+            borderWidth: 1,
+            borderRadius: 10,
+            borderColor: "#fff",
+            width: "70%",
+            height: 150,
+            justifyContent: "center",
+            alignItems: "center",
 
-        marginTop: 15,
-      }}
-      onPress={pickImage}
-    >
-      <IconButton
-        icon={"cloud-upload-outline"}
-        iconColor="#fff"
-        size={50}
-        style={{ margin: -5 }}
-      />
-      <Text style={{ color: "#fff", fontSize: 20 }}>Upload Image</Text>
-    </TouchableOpacity>
+            marginTop: 15,
+          }}
+          onPress={pickImage}
+        >
+          <IconButton
+            icon={"cloud-upload-outline"}
+            iconColor="#fff"
+            size={50}
+            style={{ margin: -5 }}
+          />
+          <Text style={{ color: "#fff", fontSize: 20 }}>Upload Image</Text>
+        </TouchableOpacity>
+      )}
 
-    }
-      
-      <TouchableOpacity
-        style={{
-          borderWidth: 1,
-          borderRadius: 10,
-          borderColor: "#fff",
-          width: "70%",
-          height: 150,
-          justifyContent: "center",
-          alignItems: "center",
+      {selectedFile === null ? (
+        <TouchableOpacity
+          style={{
+            borderWidth: 1,
+            borderRadius: 10,
+            borderColor: "#fff",
+            width: "70%",
+            height: 150,
+            justifyContent: "center",
+            alignItems: "center",
 
-          marginTop: 15,
-        }}
-        onPress={pickDocument}
-      >
-        <IconButton
-          icon={"cloud-upload-outline"}
-          iconColor="#fff"
-          size={50}
-          style={{ margin: -5 }}
-        />
-        <Text style={{ color: "#fff", fontSize: 20 }}>Upload Video</Text>
-      </TouchableOpacity>
+            marginTop: 15,
+          }}
+          onPress={pickDocument}
+        >
+          <IconButton
+            icon={"cloud-upload-outline"}
+            iconColor="#fff"
+            size={50}
+            style={{ margin: -5 }}
+          />
+          <Text style={{ color: "#fff", fontSize: 20 }}>Upload Video</Text>
+        </TouchableOpacity>
+      ) : (
+        <>
+          <Video
+            source={{ uri: selectedFile.uri }}
+            useNativeControls
+            resizeMode={ResizeMode.COVER}
+            isLooping
+            style={{ width: "70%", height: 150, borderRadius: 10 }}
+          />
+
+          {/* <Text>{selectedFile.uri}</Text>
+        <Text>{getFileExtension(selectedFile.uri)}</Text> */}
+          <Text style={{ color: "#fff", fontSize: 18 }}>
+            File Size:{formatFileSize(selectedFile.size, 2)}
+          </Text>
+          {/* <Image 
+        source={{uri : 'http://192.168.0.105:8000/uploads/1693863904.jpg'}}
+        style={{width:200,height:200}}
+        /> */}
+        </>
+      )}
+      {/* <Image 
+        source={{uri : 'http://192.168.0.105:8000/uploads/1693940647test.jpg'}}
+        style={{width:200,height:200}}
+        /> */}
       <View style={{ width: "70%", gap: 15 }}>
         <TextInput
           placeholder="Course Name"
+          onChangeText={(text) => setCourseName(text)}
+          value={courseName}
           placeholderTextColor="grey"
           style={{
             height: 45,
@@ -218,20 +277,24 @@ const UploadCourse = () => {
           }}
         />
         <DropDownPicker
-        open={open}
-        value={value}
-        items={catDisplay}
-        onChangeValue={(value) => {
-          setcategory(value)
-          console.log('cat' + category)
+          open={open}
+          value={value}
+          items={catDisplay}
+          onChangeValue={(value) => {
+            setcategory(value);
+            console.log("cat" + category);
           }}
-        setOpen={setOpen}
-        setValue={setValue}
-        setItems={setCatDisplay}
-        style={styles.drops}
-        dropDownContainerStyle={styles.dropItem}
-        placeholder={'Category'}
-        placeholderStyle={{ fontSize: 16, fontWeight: "600", paddingLeft: 10,}}
+          setOpen={setOpen}
+          setValue={setValue}
+          setItems={setCatDisplay}
+          style={styles.drops}
+          dropDownContainerStyle={styles.dropItem}
+          placeholder={"Category"}
+          placeholderStyle={{
+            fontSize: 16,
+            fontWeight: "600",
+            paddingLeft: 10,
+          }}
         />
         <View style={styles.textAreaContainer}>
           <TextInput
@@ -241,6 +304,8 @@ const UploadCourse = () => {
             placeholderTextColor="grey"
             multiline={true}
             numberOfLines={5}
+            onChangeText={(text) => setCourseDesc(text)}
+            value={courseDesc}
           />
         </View>
         {/* <TextInput
@@ -280,7 +345,9 @@ const UploadCourse = () => {
           width: "70%",
           borderRadius: 5,
           marginTop: 30,
+          marginBottom: "10%",
         }}
+        onPress={uploadDocument}
       >
         <Text
           style={{
@@ -293,14 +360,14 @@ const UploadCourse = () => {
           Upload
         </Text>
       </TouchableOpacity>
-      {selectedFile && (
+      {/* {selectedFile && (
         <>
         <Button title="Uploadd PDF" onPress={uploadDocument} />
         <Text>{selectedFile.uri}</Text>
         <Text>{getFileExtension(selectedFile.uri)}</Text>
         <Text>{formatFileSize(selectedFile.size,2)}</Text>
         </>
-      )}
+      )} */}
     </ScrollView>
   );
 };
@@ -335,6 +402,6 @@ const styles = StyleSheet.create({
     width: "70%",
     height: 150,
     marginTop: 20,
-    borderRadius:10
+    borderRadius: 10,
   },
 });

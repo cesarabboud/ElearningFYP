@@ -18,17 +18,11 @@ const App = () => {
     const token = await AsyncStorage.getItem('token');
     if (token !== null) {
       try {
-        const response = await fetch('http://192.168.0.105:8000/api/recentCourses', {
+        const response = await fetch('http://192.168.0.105:8000/api/getTopRated2', {
           method: 'GET'
-        }).then((res) => res.json())
-        .then((resData) => {
-          // console.log("response data is:",JSON.stringify(resData))
-          setRecentUploads(resData.courses)
-          //console.log(cat)
-          // console.log(cat)
-        })
-        // const resData = await response.json();
-        // setRecentUploads(resData.courses);
+        });
+        const resData = await response.json();
+        setRecentUploads(resData.courses);
       } catch (e) {
         console.log(e);
       }
@@ -71,7 +65,7 @@ const App = () => {
             cid:item.id,
             cat:item.get_category.name
         })}>
-        <View style={{ width: '100%', borderTopLeftRadius: 10, borderTopRightRadius: 10, overflow: 'hidden',justifyContent:'center',alignItems:'center' }}>
+        <View style={{ width: '100%', borderTopLeftRadius: 10, borderTopRightRadius: 10, overflow: 'hidden' }}>
           <Image 
           style={{ width: '100%', height: 140 }} 
           source={{uri : 'http://192.168.0.105:8000/'+item.thumbnail}} 
@@ -117,7 +111,7 @@ const App = () => {
         slideInterpolatedStyle={animatedStyles}
         useScrollView={true}
       />
-      {/* <Text style={styles.counter}>{index+ 1}</Text> */}
+      {/* <Text style={styles.counter}>{index}</Text> */}
     </View>
   );
 };

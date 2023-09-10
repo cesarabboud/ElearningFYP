@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState ,useEffect} from "react";
 import {
   View,
   TextInput,
@@ -17,35 +17,17 @@ import {
 import { StatusBar } from "expo-status-bar";
 import Icon from "react-native-vector-icons/FontAwesome";
 import Modal from "react-native-modal";
-import { IconButton,Provider } from "react-native-paper";
+import { IconButton,Provider,RadioButton,Checkbox,Chip,Button } from "react-native-paper";
 import BottomSheetSearchFilter from './BottomSheetSearchFilter'
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect } from "react";
 import Search2 from './Search2'
-import { useIsFocused } from "@react-navigation/native";
+import TopRated from './TopRated'
+import MultiSlider from "@ptomasroos/react-native-multi-slider";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
+import DropDownPicker from "react-native-dropdown-picker";
+import { Feather, Ionicons } from "@expo/vector-icons";
 let cnt=1, cnt2=0, catCnt=0;
 const ScreenWidth = Dimensions.get('screen').width
-const categories = [
-  "Mobile Dev "+ ++catCnt,
-  "Mobile Dev " + ++catCnt,
-  "Mobile Dev " + ++catCnt,
-  "Mobile Dev " + ++catCnt,
-  "Mobile Dev " + ++catCnt,
-  "Mobile Dev " + ++catCnt,
-  "Mobile Dev " + ++catCnt,
-  "Mobile Dev " + ++catCnt,
-  "Mobile Dev " + ++catCnt,
-  "Mobile Dev " + ++catCnt,
-];
-const categories2 = [
-  { id: 1, name: "Security" },
-  { id: 2, name: "Web Dev" },
-  { id: 3, name: "Networks" },
-  { id: 4, name: "Mobile Dev" },
-  { id: 5, name: "Machine Learning" },
-  { id: 6, name: "Mathematics" },
-  // Add more categories as needed
-];
 
 const SearchBar = () => {
   const [searchText, setSearchText] = useState("");
@@ -66,7 +48,7 @@ const SearchBar = () => {
     const token = await AsyncStorage.getItem('token')
     if(token !==null){
       try{
-        const response = await fetch('http://192.168.0.106:8000/api/allCategories',{
+        const response = await fetch('http://192.168.0.105:8000/api/allCategories',{
           method:'GET',
           headers:{
             "Accept": 'application/json',
@@ -76,9 +58,10 @@ const SearchBar = () => {
         })
         .then((res) => res.json())
       .then((resData) => {
-        console.log("response data is:",JSON.stringify(resData))
+        // console.log("response data is:",JSON.stringify(resData))
         setCat(resData.categories)
-        console.log(cat)
+        //console.log(cat)
+        // console.log(cat)
       })
       }
       catch(err){
@@ -86,10 +69,36 @@ const SearchBar = () => {
       }
     }
   }
+  const [types,setTypes] = useState([])
+  const getTypes = async () => {
+    try{
+      const response = await fetch('http://192.168.0.105:8000/api/types',{
+        method:'GET',
+        headers:{
+          "Accept": 'application/json',
+          "Content-Type": "application/json",
+        }
+      })
+      .then((res) => res.json())
+    .then((resData) => {
+      // console.log("response data is:",JSON.stringify(resData))
+      setTypes(resData.uniqueTypes)
+      // console.log(types)
+      // console.log(cat)
+    })
+    }
+    catch(err){
+      console.log(err)
+    }
+
+  }
+  const navigation = useNavigation()
   const isFocused = useIsFocused()
+  const [selectedOption, setSelectedOption] = useState(null);
   useEffect(()=>{
     if(isFocused){
       GetCategories()
+      getTypes()
     }
     
   },[isFocused])
@@ -122,39 +131,112 @@ const SearchBar = () => {
   const handleScreenPress = () => {
     Keyboard.dismiss();
   };
-  const CategoryItem = ({ item }) => {
-    const isGreenBckgrnd = (cnt2 % 2 === 0);
-    cnt++;
-    console.log("counter 1" , cnt)
-    cnt2 = cnt % 2 ===0 ?  cnt2 + 1 : cnt2;
-    return (
-      <View
-        style={{
-          width: "40%",
-          height: 120,
-          backgroundColor: isGreenBckgrnd  ? "#0ab072" : "#1E2A23",
-          borderRadius: 15,
-          justifyContent: "center",
-          overflow: "hidden",
-        }}
-      >
-        <Text style={{ fontSize: 24, fontWeight: "700", width: 80, margin: 15 , color: "#fff"}}>
-          {item}
-        </Text>
-        <Image
-          source={require("../images/blurryrect.png")}
-          resizeMode="cover"
-          style={{ position: "absolute", right: -20, bottom: 20 }}
-        />
-      </View>
+  const [selectedTypes, setSelectedTypes] = useState([]); // Array to store selected types
+
+  const handleToggle = (type) => {
+    if (selectedTypes.includes(type)) {
+      // If the type is already selected, remove it
+      setSelectedTypes(selectedTypes.filter((item) => item !== type));
       
-    );
+    } else {
+      // If the type is not selected, add it
+      setSelectedTypes([...selectedTypes, type]);
+    }
+  };
+  // useEffect(()=>{
+  //   console.log(selectedTypes)
+  // },[selectedTypes])
+
+  const [selectedCategories, setSelectedCategories] = useState([]); // Array to store selected types
+
+  const handleToggleCat = (cat) => {
+    if (selectedCategories.includes(cat)) {
+      // If the type is already selected, remove it
+      setSelectedCategories(selectedCategories.filter((item) => item !== cat));
+      
+    } else {
+      // If the type is not selected, add it
+      setSelectedCategories([...selectedCategories, cat]);
+    }
+  };
+  // useEffect(()=>{
+  //   console.log(selectedCategories)
+  // },[selectedCategories])
+  const [values, setValues] = useState([0, 500]);
+
+  const handleValuesChange = (newValues) => {
+    setValues(newValues);
+  };
+  const [ratingValue,setRatingValue] = useState(null)
+  const SearchByFilters = () => {
+    const objects = {
+      category: selectedCategories.length!==0 ? selectedCategories : [],
+      types: selectedTypes.length!==0 ? selectedTypes : [],
+      minval:values[0],
+      maxval:values[1],
+      
+    }
+    if (ratingValue !== null) {
+      objects.rating = ratingValue;
+      objects.sign = sign
+    }
+    navigation.navigate("SearchResultsByFilters",objects)
+
     
+  }
+  const [sign, setSign] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(null);
+  
+  const [signsList,setSignsList] = useState([
+    {
+      label:<IconButton icon={'greater-than'} style={{margin:0}} size={10}/>,
+      value:'Greater'
+    },
+    {
+      label:<IconButton icon={'greater-than-or-equal'} style={{margin:0}} size={10}/>,
+      value:'Greater Or Equal'
+    },
+    {
+      label:<IconButton icon={'less-than'} style={{margin:0}} size={10}/>,
+      value:'Less'
+    },
+    {
+      label:<IconButton icon={'less-than-or-equal'} style={{margin:0}} size={10}/>,
+      value:'Less Or Equal'
+    },
+    {
+      label:<IconButton icon={'equal'} style={{margin:0}} size={10}/>,
+      value:'Equal'
+    }
+  ])
+  useEffect(()=>{
+    console.log(sign)
+    setRatingValue(0)
+  },[sign])
+  useEffect(()=>{
+    console.log(ratingValue)
+  },[ratingValue])
+  const ResetFilters = () => {
+    setRatingValue(null)
+    setSelectedCategories([])
+    setSelectedTypes([])
+    setValue(null)
+    setSign('')
+  }
+  const handleValueChange = (val) => {
+    // Ensure that the input value is a valid number between 0 and 5.
+    const numericVal = parseFloat(val);
+
+    if (!isNaN(numericVal) && numericVal >= 0 && numericVal <= 5) {
+      setRatingValue(numericVal.toString());
+    }
+    // You can also show an error message or provide feedback to the user if the input is invalid.
   };
   return (
     <Provider>
 <TouchableWithoutFeedback onPress={handleScreenPress}>
-      <ScrollView style={{backgroundColor:'#1E2A23'}}>
+      <ScrollView style={{backgroundColor:'#1E2A23',flex:1}}>
       <SafeAreaView>
         
         <View
@@ -188,6 +270,12 @@ const SearchBar = () => {
               placeholder="Search"
               value={searchText}
               onChangeText={handleSearchTextChange}
+              returnKeyType={searchText === '' ? 'none' : 'search'}
+              onSubmitEditing={()=>{
+                searchText !== '' ? navigation.navigate("SearchResults",{
+                  text:searchText
+                }) : alert('field is empty')
+              }}
             />
           </View>
 
@@ -231,43 +319,9 @@ const SearchBar = () => {
             </View>
           </Modal>
         </View>
-        <View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View
-              style={{
-                flexDirection: "row",
-                marginHorizontal: 15,
-                marginBottom: 20,
-                columnGap:10
-              }}
-            >
-              {cat.map((category) => (
-                <TouchableOpacity
-                  key={category.id}
-                  onPress={() => handleCategoryPress(category)}
-                  style={{
-                    paddingHorizontal: 10,
-                    paddingVertical: 8,
-                    backgroundColor:
-                      selectedCategory === category.id ? "#03ba55" : "lightgrey",
-                    borderRadius: 5,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color:
-                        selectedCategory === category.id ? "white" : "black",
-                      fontSize: 18,
-                      fontWeight: "500",
-                    }}
-                  >
-                    {category.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
-        </View>
+        
+
+        
         <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:20,marginHorizontal:15}}>
         <Text style={{ fontWeight: "700", fontSize: 30, color:"#fff" }}>
           Recently Uploaded
@@ -276,7 +330,13 @@ const SearchBar = () => {
           <Text style={{alignSelf:'center',fontWeight:'600',color:"#fff"}}>See All</Text>
         </TouchableOpacity> */}
         </View>
-        
+        <Search2 />
+        <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:20,marginHorizontal:15,marginTop:15}}>
+        <Text style={{ fontWeight: "700", fontSize: 30, color:"#fff" }}>
+          Top Rated
+        </Text>
+        </View>
+        <TopRated />
         {/* Category List */}
           {/* <View
             style={{
@@ -297,15 +357,191 @@ const SearchBar = () => {
           show={show}
           onDismiss={() => {
             setShow(false);
+            setSign("")
+            setRatingValue(0)
+            setSelectedTypes([])
+            setSelectedCategories([])
+            setValue(null)
           }}
           enableBackdropDismiss
         >
-          <View style={{ paddingLeft: 25, paddingVertical: 25 }}>
+          <ScrollView contentContainerStyle={{ paddingVertical: 25 }}>
+            {/* View For Types */}
+            <View style={{marginHorizontal:25}}>
+              <Text style={{fontSize:18,marginBottom:10}}>Types</Text>
+              <View>
+              {
+                types.map((type,idx)=>{
+                  return(
+                    <Checkbox.Item
+                    key={idx}
+                    label={type.toUpperCase()}
+                    labelStyle={{fontWeight:"600",color:selectedTypes.includes(type) ? '#03ba55' : null}}
+                    onPress={() => handleToggle(type)}
+                    status={selectedTypes.includes(type) ? 'checked' : 'unchecked'}
+                    color="#03ba55"
+                    />
+                  )
+                })
+              }
+              </View>
+              
+            </View>
+            <View style={{height:1,backgroundColor:'#ccc',width:'100%'}} />
+            {/* View For Categories */}
+          <View style={{paddingHorizontal:25}}>
+            <Text style={{fontSize:18,marginVertical:20}}>Categories</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  marginBottom: 20,
+                  columnGap:10
+                }}
+              >
+              {cat.map((category,idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  onPress={() => handleToggleCat(category)}
+                  style={{
+                    paddingHorizontal: 10,
+                    paddingVertical: 8,
+                    // backgroundColor:
+                    //   selectedCategory === category.id ? "#03ba55" : "lightgrey",
+                    backgroundColor: selectedCategories.includes(category) ? 'rgba(3, 186, 85, 0.2)' :'#fff',
+                    
+                    borderRadius: 5,
+                    borderWidth: 1.5,
+                    borderColor: selectedCategories.includes(category) ? "#03ba55" : "#bbb",
+                  }}
+                >
+                  
+                  <Text
+                    style={{
+                      color: selectedCategories.includes(category) ? "#131313" : "#808080",
+                      fontSize: 18,
+                      fontWeight: "500",
+                    }}
+                  >
+                    {category}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView></View>
+          <View style={{height:1,backgroundColor:'#ccc',width:'100%'}} />
+          {/* View For Price */}
+          <View style={{marginHorizontal:25}}>
+            <Text style={{fontSize:18,marginVertical:20}}>Price</Text>
+            <View style={{justifyContent:'center',alignItems:'center',marginTop:20,marginRight:10}}>
+            <MultiSlider
+            values={values}
+            sliderLength={250}
+            onValuesChange={handleValuesChange}
+            min={0}
+            max={500}
+            step={1}
+            snapped={true}
+            enableLabel={true}
+            
+            selectedStyle={{
+              backgroundColor: '#03ba55',
+            }}
+            unselectedStyle={{
+              backgroundColor: '#ccc',
+            }}
+            markerStyle={{
+              backgroundColor: '#03ba55',
+            }}
+            
+            />
+
+            </View>
+            {/* <View style={{flexDirection:'row',justifyContent:'space-between'}}>
+              <Text style={{color:"#03ba55",fontWeight:"600",fontSize:16}}>${values[0]}</Text>
+              <Text style={{color:"#03ba55",fontWeight:"600",fontSize:16,marginRight:25}}>${values[1]}</Text>
+            </View> */}
+          </View>
+          <View style={{height:1,backgroundColor:'#ccc',width:'100%',marginTop:20}} />
+          {/* View For Rating */}
+          <View style={{marginHorizontal:25}}>
+            <Text style={{fontSize:18,marginVertical:20}}>Rating</Text>
+            <View style={{flexDirection:'row',alignItems:'center',gap:25}}>
+            <View style={{width:100}}>
+            <DropDownPicker
+          open={open}
+          value={value}
+          items={signsList}
+          onChangeValue={(value) => {
+            setSign(value);
+            //console.log("sign" + sign);
+          }}
+          setOpen={setOpen}
+          setValue={setValue}
+          setItems={setSignsList}
+          // style={styles.drops}
+          // dropDownContainerStyle={styles.dropItem}
+          placeholder={"Sign"}
+          placeholderStyle={{
+            fontSize: 16,
+            fontWeight: "600",
+            paddingLeft: 10,
+          }}
+          
+        />
+            </View>
+            {
+              sign !== '' ? (
+                <View style={{flexDirection:'row',gap:10,alignItems:'center',borderRadius:10}}>
+                  {
+                    sign !== null ? (
+                      <>
+                      
+                      <Feather onPress={()=> ratingValue > 0 ? setRatingValue(ratingValue-1) : null}  name="minus" size={18}  />
+                      
+                      <View style={{padding:10,backgroundColor:'#03ba55',justifyContent:'center',alignItems:'center',width:35,height:35,borderRadius:5}}>
+                      <TextInput style={{fontSize:22,fontWeight:"600",color:"#fff"}} value={ratingValue + ''} onChangeText={(text)=>handleValueChange(text)} keyboardType="numeric" />
+                      </View>
+                      
+                      <Feather onPress={()=> ratingValue < 5 ? setRatingValue(ratingValue+1) : null}  name="plus" size={18}  />
+                      
+                      </>
+                    ) : null
+                  }
+                  {
+                    (sign !== null && ratingValue !== 0) ? <Button onPress={()=>{
+                      setSign('')
+                      setRatingValue(0)
+                    }}>Reset</Button> : null
+                  }
+                
+                </View>
+              ) : null
+            }
+            
+            </View>
             
           </View>
-        </BottomSheetSearchFilter>
-        <Search2 />
+          {/* <ScrollView contentContainerStyle={{gap:10}} horizontal showsHorizontalScrollIndicator={false}>
+            {
+              cat.map((c,idx)=>{
+                return <Chip key={idx} focusable style={{height:40,backgroundColor:'#fff',borderWidth:1,borderColor:"#03ba55"}}  icon="check" onPress={() => console.log('Pressed')}>{c.name}</Chip>
+              })
+            }
+          </ScrollView> */}
+          <View style={{flexDirection:'row',justifyContent:'center',alignItems:'center',marginVertical:20,gap:15}}>
+            <TouchableOpacity onPress={ResetFilters} style={styles.resetFilterBtn}>
+              <Text style={{fontWeight:"600",color:"#03ba55",fontSize:18}}>Reset</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={SearchByFilters} style={styles.searchFilterBtn}>
+              <Text style={{color:"#fff",fontWeight:"600",fontSize:18}}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        
+          </ScrollView>
 
+        </BottomSheetSearchFilter>
+        
       </ScrollView>
       
     </TouchableWithoutFeedback>
@@ -341,6 +577,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 16,
   },
+  resetFilterBtn:{
+    backgroundColor:'rgba(3, 186, 85, 0.2)',
+    justifyContent:'center',
+    alignItems:'center',
+    paddingVertical:15,
+    borderRadius:10,
+    width:"45%"
+  },
+  searchFilterBtn:{
+    backgroundColor:'#03ba55',
+    justifyContent:'center',
+    alignItems:'center',
+    paddingVertical:15,
+    borderRadius:10,
+    width:"45%"
+  }
 });
 
 export default SearchBar;

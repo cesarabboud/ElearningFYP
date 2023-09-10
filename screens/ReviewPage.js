@@ -10,58 +10,19 @@ import {
   TextInput,
   KeyboardAvoidingView
 } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer,useRoute } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { IconButton, List } from "react-native-paper";
 import { ScrollView } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const red = 29 / 3,
   green = (176 + 186 + 183) / 3,
   blue = (114 + 93 + 65) / 3;
 const screenwidth = Dimensions.get("window").width;
-const reviews = [
-  {
-    id: 1,
-    name: "Cesar Abboud",
-    rating: 5,
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod temporincididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet," +
-      "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et " +
-      "dolore magna aliq.",
-  },
-  {
-    id: 2,
-    name: "Cesar Abboud",
-    rating: 5,
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod temporincididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet," +
-      "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et " +
-      "dolore magna aliq.",
-  },
-  {
-    id: 3,
-    name: "Cesar Abboud",
-    rating: 5,
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod temporincididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet," +
-      "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et " +
-      "dolore magna aliq.",
-  },
-  {
-    id: 4,
-    name: "Cesar Abboud",
-    rating: 5,
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod temporincididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet," +
-      "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et " +
-      "dolore magna aliq.",
-  },
-];
 
 const ListReview = ({ item }) => {
-  /*const [liked,setLiked] =  React.useState(false)
-  const handleLike = () =>{
-    setLiked(!liked);
-  }*/
+
+  
   return (
     <ScrollView style={{ gap: 10, marginTop: 10, marginHorizontal: 10 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
@@ -73,13 +34,13 @@ const ListReview = ({ item }) => {
           }}
         >
           <Image
-            source={require("../images/profilepic.jpg")}
+            source={{uri:'http://192.168.0.105:8000/'+item.get_user.profilepicture}}
             style={{ width: 50, height: 50 }}
           />
         </View>
         <View style={{ gap: 3 }}>
           <Text>
-            {item.name} {/* username */}
+            {item.get_user.name} {/* username */}
           </Text>
 
           <View
@@ -92,31 +53,31 @@ const ListReview = ({ item }) => {
             <View style={{ flexDirection: "row", gap: 5 }}>
               <IconButton
                 icon="star"
-                iconColor="#ffc107"
+                iconColor={ item.rating >=1 ? "#ffc107" : "#b5b2b2"}
                 size={18}
                 style={{ marginHorizontal: -10, marginVertical: -8 }}
               />
               <IconButton
                 icon="star"
-                iconColor="#ffc107"
+                iconColor={ item.rating >=2 ? "#ffc107" : "#b5b2b2"}
                 size={18}
                 style={{ marginHorizontal: -10, marginVertical: -8 }}
               />
               <IconButton
                 icon="star"
-                iconColor="#ffc107"
+                iconColor={ item.rating >=3 ? "#ffc107" : "#b5b2b2"}
                 size={18}
                 style={{ marginHorizontal: -10, marginVertical: -8 }}
               />
               <IconButton
                 icon="star"
-                iconColor="#ffc107"
+                iconColor={ item.rating >=4 ? "#ffc107" : "#b5b2b2"}
                 size={18}
                 style={{ marginHorizontal: -10, marginVertical: -8 }}
               />
               <IconButton
                 icon="star"
-                iconColor="#ffc107"
+                iconColor={ item.rating >=5 ? "#ffc107" : "#b5b2b2"}
                 size={18}
                 style={{ marginHorizontal: -10, marginVertical: -8 }}
               />
@@ -135,10 +96,7 @@ const ListReview = ({ item }) => {
         }}
       >
         <Text style={{ color: "#959595", textAlign: "left", width: 300 }}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-          eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem
-          ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-          tempor incididunt ut labore et dolore magna aliq.
+          {item.content}
         </Text>
         <View style={{ justifyContent: "center", alignItems: "center" }}>
           <IconButton
@@ -146,8 +104,9 @@ const ListReview = ({ item }) => {
             iconColor="#ccc"
             size={16}
             style={{ margin: 0 }}
+            onPress={()=>{}}
           />
-          <Text>0</Text>
+          <Text>{item.likes}</Text>
         </View>
       </View>
       <TextInput
@@ -164,7 +123,35 @@ const ListReview = ({ item }) => {
     </ScrollView>
   );
 };
-function Reviews({ navigation }) {
+
+const Reviews = () => {
+  const route = useRoute();
+  const { id } = route.params;
+  const [reviews, setReviews] = useState([]);
+  let [avg,setAvg] = useState(0)
+  const getCourseReviews = async () => {
+    const token = await AsyncStorage.getItem('token')
+    if(token !==null) {
+      try{
+        const response = await fetch('http://192.168.0.105:8000/api/getCourseRev/'+id,{
+          method:"GET",
+          headers:{
+          'Authorization':`Bearer ${token}`
+          }
+        })
+        const resData = await response.json()
+        //console.log(resData.reviews)
+        setReviews(resData.reviews)
+        setAvg(resData.avg)
+      }
+      catch(err){
+        console.log(err)
+      }
+    }
+  }
+  React.useEffect(()=>{
+    getCourseReviews()
+  },[])
   return (
     <>
     {/* Review */}
@@ -186,15 +173,15 @@ function Reviews({ navigation }) {
             fontWeight: "600",
           }}
         >
-          4.0
+          {Math.floor(avg)}.0
         </Text>
       </View>
       <View style={{ flexDirection: "row", alignSelf: "center" }}>
-        <IconButton icon="star" iconColor="#ffc107" style={styles.starIcon} />
-        <IconButton icon="star" iconColor="#ffc107" style={styles.starIcon} />
-        <IconButton icon="star" iconColor="#ffc107" style={styles.starIcon} />
-        <IconButton icon="star" iconColor="#ffc107" style={styles.starIcon} />
-        <IconButton icon="star" iconColor="#b5b2b2" style={{ margin: 0 }} />
+        <IconButton icon="star" iconColor={ avg >=1 ? "#ffc107" : "#b5b2b2"} style={styles.starIcon} />
+        <IconButton icon="star" iconColor={ avg >=2 ? "#ffc107" : "#b5b2b2"} style={styles.starIcon} />
+        <IconButton icon="star" iconColor={ avg >=3 ? "#ffc107" : "#b5b2b2"} style={styles.starIcon} />
+        <IconButton icon="star" iconColor={ avg >=4 ? "#ffc107" : "#b5b2b2"} style={styles.starIcon} />
+        <IconButton icon="star" iconColor={ avg >=5 ? "#ffc107" : "#b5b2b2"} style={{ margin: 0 }} />
       </View>
       <Text style={{ textAlign: "center", fontSize: 12 }}>
         Based On {reviews.length} Reviews
@@ -355,32 +342,6 @@ function Reviews({ navigation }) {
         style={{marginVertical:20}}
       />
       
-      {/* <TouchableOpacity
-        onPress={() => navigation.navigate("AddReview")}
-        style={{
-          marginHorizontal: 20,
-          marginBottom: 20,
-          height: 70,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#fff",
-          borderColor: "#02BA5D",
-          borderWidth: 2,
-          borderRadius: 10,
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 20,
-            textTransform: "uppercase",
-            fontWeight: "bold",
-            color: "#02BA5D",
-          }}
-        >
-          Write A Review
-        </Text>
-      </TouchableOpacity> */}
-      {/* <Text style={{textAlign:'center',backgroundColor:'red'}}>{reviews.length}</Text> */}
     </>
   );
 }
@@ -403,12 +364,16 @@ function CustomHeader({ scene, navigation }) {
 
 const Stack = createNativeStackNavigator();
 
-const ReviewPage = () => {
+const ReviewPage = ({route}) => {
+  const {id} = route.params
   return (
     <Stack.Navigator>
       <Stack.Screen
         name="Reviews"
         component={Reviews}
+        initialParams={{
+          id:id
+        }}
         options={({ navigation, route }) => ({
           header: (props) => (
             <CustomHeader {...props} navigation={navigation} />

@@ -16,19 +16,24 @@ import React, { useState, useEffect } from "react";
 import { SvgXml } from "react-native-svg";
 import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { IconButton } from "react-native-paper";
+import { IconButton,Snackbar } from "react-native-paper";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
+
 const ShoppingCart = () => {
   const [cartitems, setCartItems] = useState([]);
   const [total,setTotal] = useState(0)
+  const [visible,setVisible] = useState(false)
+  const onToggleSnackBar = () => setVisible(!visible);
+  const onDismissSnackBar = () => setVisible(false);
+  const [lastId,setLastId] = useState(0)
   const isFocused = useIsFocused()
   const getCartContent = async () => {
     const token = await AsyncStorage.getItem("token");
     if (token !== null) {
       try {
         const response = await fetch(
-          "http://192.168.0.106:8000/api/displayCart",
+          "http://192.168.0.105:8000/api/displayCart",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -55,12 +60,32 @@ const ShoppingCart = () => {
       }
     }
   };
+  const addItemToCart = async (id) => {
+    const token = await AsyncStorage.getItem('token')
+    if(token !== null){
+        try{
+            const response = await fetch('http://192.168.0.105:8000/api/addItemToCart/'+id,{
+                method:"POST",
+                headers:{
+                    "Authorization":`Bearer ${token}`
+                }
+            })
+            const resData = await response.json()
+            console.log(resData.message)
+            getCartContent()
+            
+        }
+        catch(err){
+            console.log(err)
+        }
+    }
+  }
   const deleteItemFromCart = async (id) => {
     //console.log('hello from delete')
     const token = await AsyncStorage.getItem('token')
     if(token!==null){
       try{
-        const response = await fetch('http://192.168.0.106:8000/api/removeItemFromCart/'+id,{
+        const response = await fetch('http://192.168.0.105:8000/api/removeItemFromCart/'+id,{
           method:"GET",
           headers:{
             "Authorization":`Bearer ${token}`
@@ -68,6 +93,8 @@ const ShoppingCart = () => {
         })
         const resData = await response.json()
         console.log(resData.message)
+        setLastId(id)
+        onToggleSnackBar()
         if(cartitems.length > 0 ){
           getCartContent()
         }
@@ -83,7 +110,7 @@ const ShoppingCart = () => {
     const token = await AsyncStorage.getItem('token')
     if(token !==null){
       try{
-        const response = await fetch('http://192.168.0.106:8000/api/removeAll',{
+        const response = await fetch('http://192.168.0.105:8000/api/removeAll',{
           method:"GET",
           headers:{
             "Authorization":`Bearer ${token}`
@@ -245,6 +272,20 @@ const ShoppingCart = () => {
         </TouchableOpacity>
 
         <StatusBar style="dark" />
+        <Snackbar
+        visible={visible}
+        onDismiss={onDismissSnackBar}
+        duration={7000}
+        action={{
+          label: 'Undo',
+          
+          onPress: () => {
+            // Do something
+            addItemToCart(lastId)
+          },
+        }}>
+        Item Deleted From Cart !
+      </Snackbar>
       </SafeAreaView>
     );
   }
@@ -260,8 +301,8 @@ const ShoppingCart = () => {
         <View style={styles.cartContent}>
           {cartitems.map((c, idx) => {
             return (
-            <>
-              <View key={idx}>
+            <View key={idx}>
+              <View>
                 <View
                   style={{
                     flexDirection: "row",
@@ -276,7 +317,7 @@ const ShoppingCart = () => {
                     >
                       <Image
                         // source={{uri: user.profilepicture}}
-                        source={require("../images/jsyellow.png")}
+                        source={{uri:'http://192.168.0.105:8000/'+c.thumbnail}}
                         style={{
                           width: 80,
                           height: 80,
@@ -301,7 +342,7 @@ const ShoppingCart = () => {
               
               </View>
               {idx !== cartitems.length - 1 ? <View style={{height:3,backgroundColor:"#ececec"}} /> : null}
-              </>
+              </View>
             );
           })}
         </View>
@@ -341,9 +382,23 @@ const ShoppingCart = () => {
         <TouchableOpacity onPress={goToCheckout} style={styles.checkoutbtn}>
             <Text style={styles.checkouttext}>Checkout</Text>
         </TouchableOpacity>
+        
         </ScrollView>
         
-        
+        <Snackbar
+        visible={visible}
+        onDismiss={onDismissSnackBar}
+        duration={7000}
+        action={{
+          label: 'Undo',
+          
+          onPress: () => {
+            // Do something
+            addItemToCart(lastId)
+          },
+        }}>
+        Item Deleted From Cart !
+      </Snackbar>
       </View>
     );
   }

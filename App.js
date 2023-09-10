@@ -17,6 +17,7 @@ import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 import ForgotPasswordScreen from "./screens/forgotpassScreen";
 import ChooseRole from "./screens/chooseRole";
+import MyCourses from "./screens/MyCourses"
 import {
   NavigationContainer,
   useNavigation,
@@ -54,6 +55,7 @@ import QuestionsAnswers from "./screens/QuestionsAnswers";
 import { SvgXml } from "react-native-svg";
 import Search2 from './screens/Search2'
 import CheckoutPayment from './screens/CheckoutPayment'
+import SearchResultsByFilters from './screens/SearchResultsByFilters'
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -418,11 +420,13 @@ const App = ({ navigation }) => {
         />
         <Stack.Screen name="WebBrowser" component={WebBrowser} />
         <Stack.Screen name="Studentprofile" component={StudentProfile} />
-        <Stack.Screen name="AnimationScreen" component={SearchResults} />
+        <Stack.Screen name="SearchResults" component={SearchResults} />
         <Stack.Screen name="MyWebComponent" component={MyWebComponent} />
         <Stack.Screen name="Actions" component={ActionsWithPDF} />
         <Stack.Screen name="Search2" component={Search2} />
         <Stack.Screen name="CheckoutPayment" component={CheckoutPayment} />
+        <Stack.Screen name="MyCourses" component={MyCourses} />
+        <Stack.Screen name="SearchResultsByFilters" component={SearchResultsByFilters}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

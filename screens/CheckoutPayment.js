@@ -1,4 +1,4 @@
-import React from 'react';
+import React ,{ useState,useEffect} from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,14 @@ import {
   TouchableOpacity,
   Image,
   StatusBar,
+  ScrollView
 } from 'react-native';
 import { CreditCardInput,LiteCreditCardInput } from "react-native-credit-card-input";
 import { Secret_key, STRIPE_PUBLISHABLE_KEY } from './keys/keys';
 import { TouchableWithoutFeedback } from 'react-native';
 import { Keyboard } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { toEditorSettings } from 'typescript';
 
 // create a component
 const CURRENCY = 'USD';
@@ -64,10 +67,29 @@ function getCreditCardToken(creditCardData){
 const StripeGateway = ({route}) => {
 
     const {total} = route.params
-    console.log(total)
 
   const [CardInput, setCardInput] = React.useState({})
+  const [email,setEmail] = useState('')
+  const [fullName,setFullName] = useState('')
 
+  const CheckoutFct = async () => {
+    const token = await AsyncStorage.getItem('token')
+    if(token !==null) {
+      try{
+        const response = await fetch('http://192.168.0.105:8000/api/checkoutCart',{
+          method:"POST",
+          headers:{
+            "Authorization":`Bearer ${token}`
+          }
+        })
+        const resData = await response.json()
+        console.log(resData)
+      }
+      catch(e){
+        console.log(e)
+      }
+    }
+  }
   const onSubmit = async () => {
 
     if (CardInput.valid == false || typeof CardInput.valid == "undefined") {
@@ -100,6 +122,8 @@ const StripeGateway = ({route}) => {
       if(payment_data.status == 'succeeded')
       {
         alert("Payment Successful !");
+        CheckoutFct()
+        Keyboard.dismiss()
         
       }
       else{
@@ -107,7 +131,7 @@ const StripeGateway = ({route}) => {
       }
       
     }
-    Keyboard.dismiss()
+    
   };
 
 
@@ -118,7 +142,19 @@ const StripeGateway = ({route}) => {
         'amount': total * 100, 
         'currency': CURRENCY,
         'source': CARD_TOKEN,
-        'description': "Cesar Abboud"
+        'description': "Cesar Abboud",
+        // 'customer': {
+        //   'name': 'John Doe',
+        //   'email': 'john.doe@example.com',
+        //   'address': {
+        //     'line1': '123 Main St',
+        //     'line2': 'Apt 4B',
+        //     'city': 'Anytown',
+        //     'state': 'CA',
+        //     'postal_code': '12345',
+        //     'country': 'US'
+        //   }
+        // }
       };
 
       return fetch('https://api.stripe.com/v1/charges', {
@@ -145,19 +181,22 @@ const StripeGateway = ({route}) => {
   const _onChange =(data) => {
     setCardInput(data)
   }
-
-  return (
-<View style={styles.container}>
   
+  return (
+<ScrollView style={styles.container}>
+        <StatusBar barStyle={'light-content'} />
         <View style={{height:20}} />
         <CreditCardInput 
         inputContainerStyle={styles.inputContainerStyle}
         inputStyle={styles.inputStyle}
         labelStyle={styles.labelStyle}
-        validColor="#fff"
+        validColor="#000"
         placeholderColor="#ccc"
-        onChange={_onChange} />
+        onChange={_onChange}
+        />
+        
 
+        
       <TouchableOpacity 
       onPress={onSubmit}
       style={styles.button}>
@@ -166,7 +205,7 @@ const StripeGateway = ({route}) => {
           Pay Now
         </Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
     
   );
 };
@@ -174,8 +213,7 @@ const StripeGateway = ({route}) => {
 // define your styles
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'red',
-    flex:1
+    backgroundColor:'#1E2A23'
   },
   ImgStyle: {
     width: '100%',
@@ -200,18 +238,22 @@ const styles = StyleSheet.create({
     textTransform:'uppercase'
   },
   inputContainerStyle : {
-    backgroundColor:'#fff',
-    borderRadius:5
+    //backgroundColor:'#fff',
+    borderRadius:5,
+    color:"green"
   },
   inputStyle : {
-    backgroundColor:'#222242',
+     //backgroundColor:'#222242',
+    backgroundColor:'#fff',
     paddingLeft:15,
     borderRadius:5,
-    color:'#fff'
+    color:'#000'
   },
   labelStyle : {
-    marginBottom:5,
-    fontSize:12
+    paddingBottom:5,
+    fontSize:12,
+    backgroundColor:"#1E2A23",
+    color:"#fff"
   }
  
 });

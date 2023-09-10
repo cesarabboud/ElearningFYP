@@ -5,25 +5,38 @@ import { Button, IconButton } from "react-native-paper";
 import React,{useState,useEffect} from "react";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Ionicons } from "@expo/vector-icons";
 const App = ({route}) => {
-  const {text} = route.params
+  const {category,types,minval,maxval,rating,sign} = route.params
+  // console.log(minval)
+  console.log('rating from filters',rating)
+  console.log('sign',sign)
   const [searchRes,setSearchRes] = useState([])
   const navigation = useNavigation()
-  const SearchByName = async () => {
+  const SearchByFilters = async () => {
 
       const token = await AsyncStorage.getItem('token')
       if(token!==null){
         try{
           //sending a regular json caused an error so i sent the title using formdata
-          const formData = new FormData()
-          formData.append('title',text)
-          const response = await fetch('http://192.168.0.105:8000/api/searchCourseByName',{
+          
+          // formData.append('types',types)
+          // formData.append('minPrice',minval)
+          // formData.append('maxPrice',maxval)
+          const response = await fetch('http://192.168.0.105:8000/api/searchCourseByFilters',{
             method:"POST",
             headers:{
-              "Authorization":`Bearer ${token}`
+              "Authorization":`Bearer ${token}`,
+              "Accept": "application/json",
+              "Content-Type": "application/json",
             },
-            body:formData
+            body:JSON.stringify({
+              category:category,
+              types:types,
+              minPrice:minval,
+              maxPrice:maxval,
+              rating:rating,
+              sign:sign
+            })
           })
           const resData = await response.json()
           if(resData.nbcourses){
@@ -37,7 +50,7 @@ const App = ({route}) => {
       }
     }
   useEffect(()=>{
-    SearchByName()
+    SearchByFilters()
   },[])  
   return (
     
@@ -98,7 +111,7 @@ const App = ({route}) => {
           </Text>
           <Text style={{ fontSize: 12, fontWeight: '300', marginTop: 8,color:"#fff" }}>{prod.title}</Text>
           <View
-            style={{ flexDirection: "row", justifyContent: "space-between",alignItems:"center",marginVertical:10}}
+            style={{ flexDirection: "row", justifyContent: "space-between",alignItems:"center"}}
           >
             <View
               style={{
@@ -107,9 +120,8 @@ const App = ({route}) => {
                 alignItems: "center",
               }}
             >
-              {/* <IconButton icon={"star"} iconColor="#ffc107" style={{ margin:0 }} /> */}
-              <Ionicons name='star' color={'#ffc107'} size={20}/>
-              <Text style={{fontSize: 12, fontWeight: '600',color:"#fff"}}>{prod.rating}</Text>
+              <IconButton icon={"star"} iconColor="#ffc107" style={{ margin:0 }} />
+              <Text style={{fontSize: 12, fontWeight: '600',color:"#fff"}}>{prod.type} {prod.get_category.name} {prod.rating}.0</Text>
             </View>
             <Text style={{fontSize: 16, fontWeight: '600',color:"#fff"}}>${prod.price}</Text>
 

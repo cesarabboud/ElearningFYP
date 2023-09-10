@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import { IconButton, Provider } from "react-native-paper";
 import BottomSheet from "../screens/BottomSheetInstructor";
-import { useNavigation } from "@react-navigation/native";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { SvgXml } from "react-native-svg";
 import { StackActions } from "@react-navigation/native";
@@ -32,7 +32,7 @@ export default function InstructorProfile() {
   const getLoggedInUserDetails = async () =>{
     const token = await AsyncStorage.getItem('token')
     try{
-      const response = await fetch("http://192.168.0.106:8000/api/getLoggedInUserDetails",{
+      const response = await fetch("http://192.168.0.105:8000/api/getLoggedInUserDetails",{
         method:"GET",
         headers:{
           "Accept": 'application/json',
@@ -51,10 +51,13 @@ export default function InstructorProfile() {
       console.log('error:',err)
     }
   }
+  const isFocused = useIsFocused()
   React.useEffect(()=>{
     //getData()
-    getLoggedInUserDetails()
-  },[])
+    if(isFocused){
+      getLoggedInUserDetails()
+    }
+  },[isFocused])
   const navigation = useNavigation();
   const whitelogo =`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="78" height="26" viewBox="0 0 78 26" fill="none">
   <rect width="78" height="26" fill="url(#pattern0)"/>
@@ -68,7 +71,7 @@ export default function InstructorProfile() {
   const handleLogout = async () =>{
     const val = await AsyncStorage.getItem('token')
     try{
-      const response = await fetch('http://192.168.0.106:8000/api/logout',{
+      const response = await fetch('http://192.168.0.105:8000/api/logout',{
         method: 'POST',
         headers:{
           "Accept": 'application/json',
@@ -123,7 +126,7 @@ export default function InstructorProfile() {
         >
           <View style={{ borderRadius: "100", overflow: "hidden" }}>
             <Image
-            source={{uri: user.profilepicture}}
+            source={{uri: 'http://192.168.0.105:8000/'+user.profilepicture}}
                //source={require("../images/profilepic.jpg")}
               style={{ width: 100, height: 100,backgroundColor:'#ccc' }}
               resizeMode='cover'

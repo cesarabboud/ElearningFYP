@@ -86,7 +86,7 @@ const BottomSheet = ({ show, onDismiss, enableBackdropDismiss, children }) => {
                 alignItems: "center",
                 marginTop: 40,
                 
-                marginHorizontal:20
+                marginHorizontal:25
               }}
             >
               {/* <View

@@ -25,7 +25,7 @@ const CourseDetails = ({route}) => {
       const token = await AsyncStorage.getItem('token')
       if(token!==null){
         try{
-          const response = await fetch('http://192.168.0.106:8000/api/courseDetails/'+courseId,{
+          const response = await fetch('http://192.168.0.105:8000/api/courseDetails/'+courseId,{
             method:"GET",
             headers:{
               "Authorization":`Bearer ${token}`
@@ -56,8 +56,10 @@ const CourseDetails = ({route}) => {
 
   return (
     <ScrollView>
-      <Image source={require("../images/jsyellow.png")} />
-      <TouchableOpacity style={styles.playBtnView}>
+      <Image source={{uri:'http://192.168.0.105:8000/'+course.thumbnail}}
+      style={{width:'100%',height:200,marginBottom:20}}
+      />
+      {/* <TouchableOpacity style={styles.playBtnView}>
         <View>
           <IconButton
             icon={"play"}
@@ -66,7 +68,7 @@ const CourseDetails = ({route}) => {
             style={{ margin: 0 }}
           />
         </View>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
       <View style={{ marginHorizontal: 15, gap: 5 }}>
         <Text
           style={{
@@ -164,7 +166,10 @@ const CourseDetails = ({route}) => {
             </Text>
           </TouchableOpacity>
         </View>
-        <View
+        {
+          nbrev > 0 ? (
+          <>
+          <View
           style={{
             justifyContent: "center",
             alignItems: "center",
@@ -221,7 +226,9 @@ const CourseDetails = ({route}) => {
         </View>
         <View style={{ height: 1, backgroundColor: "#ccc" }} />
         <TouchableOpacity
-          onPress={() => navigation.navigate("ReviewPage")}
+          onPress={() => navigation.navigate("ReviewPage",{
+            id:courseId
+          })}
           style={{
             justifyContent: "space-between",
             flexDirection: "row",
@@ -238,10 +245,16 @@ const CourseDetails = ({route}) => {
             style={{ margin: 0 }}
           />
         </TouchableOpacity>
+        
+        </>
+          ) : null
+        }
+        
         <View style={{ height: 1, backgroundColor: "#ccc" }} />
         <TouchableOpacity
           onPress={() => navigation.navigate("AddReview",{
-            id:courseId
+            id:courseId,
+            course:course
           })}
           style={{
             justifyContent: "space-between",
@@ -259,6 +272,9 @@ const CourseDetails = ({route}) => {
             style={{ margin: 0 }}
           />
         </TouchableOpacity>
+        {
+          nbrev === 0 ? <View style={{ height: 1, backgroundColor: "#ccc",marginBottom:20 }} /> : null
+        }
         <View
           style={{
             alignSelf: "center",

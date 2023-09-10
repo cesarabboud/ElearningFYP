@@ -21,7 +21,7 @@ import {
 } from "react-native-paper";
 import Modal from "react-native-modal";
 import Constants from "expo-constants";
-import { useNavigation } from "@react-navigation/native";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 import * as Sharing from "expo-sharing";
 import { Buffer as NodeBuffer } from "buffer";
 import * as FileSystem from "expo-file-system";
@@ -33,7 +33,7 @@ const StudentsList = () => {
   const getmyStd = async () =>{
     const val = await AsyncStorage.getItem('token')
     try{
-      const response = await fetch('http://192.168.0.100:8000/api/getInstructorProfileInfo',{
+      const response = await fetch('http://192.168.0.105:8000/api/getInstructorProfileInfo',{
         method: 'GET',
         headers:{
           "Accept": 'application/json',
@@ -51,9 +51,11 @@ const StudentsList = () => {
     }
   }
   const [myStudents,setmyStudents] = useState([])
+  const isFocused = useIsFocused()
   useEffect(() =>{
+    if(isFocused)
     getmyStd()
-  },[])
+  },[isFocused])
   const generateShareableExcel = async () => {
     const now = new Date();
     const fileName = `${now.getTime()}.xlsx`;
@@ -185,7 +187,6 @@ const StudentsList = () => {
           <DataTable.Title>Image</DataTable.Title>
           <DataTable.Title> UserName</DataTable.Title>
           <DataTable.Title>Email</DataTable.Title>
-          <DataTable.Title></DataTable.Title>
         </DataTable.Header>
 
         {myStudents.slice(from, to).map((item) => (
@@ -214,7 +215,7 @@ const StudentsList = () => {
             <DataTable.Cell>
               {item.email}
             </DataTable.Cell>
-            <DataTable.Cell
+            {/* <DataTable.Cell
               style={{ alignItems: "center", justifyContent: "center" }}
             >
               <IconButton
@@ -222,7 +223,7 @@ const StudentsList = () => {
                 icon={"close"}
                 iconColor="red"
               />
-            </DataTable.Cell>
+            </DataTable.Cell> */}
           </DataTable.Row>
         ))}
 

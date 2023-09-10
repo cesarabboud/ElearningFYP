@@ -25,7 +25,7 @@ const HomeScreen = ({route}) => {
   const [uname,setUname] = useState('')
   const getHomeScrData = async () =>{
     const token = await AsyncStorage.getItem('token')
-    const response = await fetch('http://192.168.0.106:8000/api/HomeScr',{
+    const response = await fetch('http://192.168.0.105:8000/api/HomeScr',{
       headers:{
         "Authorization":`Bearer ${token}`
       }
@@ -311,6 +311,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     opacity: 0.8,
+    borderRadius:10
   },
   belowVidThumbnail: {
     justifyContent: "space-between",

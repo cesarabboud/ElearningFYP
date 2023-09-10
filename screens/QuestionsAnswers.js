@@ -7,6 +7,7 @@ import {
   TextInput,
   ScrollView,
   Image,
+  KeyboardAvoidingView
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import Constants from "expo-constants";
@@ -17,44 +18,55 @@ import { TouchableOpacity } from "react-native";
 import BottomSheet from "./BottomSheetQA";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import moment from "moment";
-const QuestionsAnswers = () => {
+import { Dimensions } from "react-native";
+import { Alert } from "react-native";
+import { formatDiagnostic } from "typescript";
+import { useIsFocused } from "@react-navigation/native";
+const QuestionsAnswers = ({navigation}) => {
   const [text, setText] = useState("");
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
+
   const [searchedQuestions, setSearchedQuestions] = useState([]);
   const getQuestions = async () => {
     const token = await AsyncStorage.getItem("token");
     if (token !== null) {
       try {
-        const response = await fetch("http://192.168.0.106:8000/api/allQ", {
+        const response = await fetch("http://192.168.0.105:8000/api/allQ", {
           method: "GET",
         });
         const resData = await response.json();
         setQuestions(resData.questions);
-        console.log(questions);
+        //console.log(questions);
       } catch (err) {
         console.log(err);
       }
     }
   };
+  const isFocusedd = useIsFocused()
   useEffect(() => {
-    getQuestions();
-  }, []);
-
+    if(isFocusedd){
+      getQuestions();
+    }
+    
+  }, [isFocusedd]);
+  const [questionIdToAnswer,setQuestionIdToAnswer] = useState(0)
   const getAnswers = async (id) => {
     const token = await AsyncStorage.getItem("token");
     if (token !== null) {
       try {
         const response = await fetch(
-          "http://192.168.0.106:8000/api/answers/" + id,
+          "http://192.168.0.105:8000/api/answers/" + id,
           {
             method: "GET",
           }
         );
+        setQuestionIdToAnswer(id)
         const resData = await response.json();
         // console.log(resData.answers ? resData.answers : resData.msg)
         if (resData.answers) {
           setAnswers(resData.answers);
+          // console.log(resData.answers)
         } else {
           setAnswers([]);
         }
@@ -74,6 +86,9 @@ const QuestionsAnswers = () => {
     } else if (hours !== 0 && minutes === 0) {
       return `${hours}h ago`;
     }
+    else if(minutes === 0){
+      return `Just Now`
+    }
     return `${minutes}min ago`;
   };
 
@@ -82,7 +97,7 @@ const QuestionsAnswers = () => {
     if (token !== null) {
       try {
         const response = await fetch(
-          "http://192.168.0.106:8000/api/searchQuest",
+          "http://192.168.0.105:8000/api/searchQuest",
           {
             method: "POST",
             headers: {
@@ -101,6 +116,51 @@ const QuestionsAnswers = () => {
       }
     }
   };
+  const AddAnswer = async (QuestionId) => {
+    const token = await AsyncStorage.getItem('token')
+    if(token!==null){
+      console.log('fi token')
+      try{
+        const response = await fetch('http://192.168.0.105:8000/api/respondToQuestion/'+QuestionId,{
+          method:"POST",
+          headers:{
+            'Content-Type': 'application/json',
+            "Authorization":`Bearer ${token}`
+          },
+          body:JSON.stringify({
+            answer:answerfield
+          })
+        })
+        const resData = await response.json()
+        console.log(resData.msg)
+        setAnswerField('')
+        Keyboard.dismiss()
+        getAnswers(QuestionId)
+        getQuestions()
+      }
+      catch(err){
+        console.log(err)
+      }
+    }
+  }
+  const GetUserAnswer = (qid) => {
+    Alert.prompt(
+      'Answer',
+      null,
+      (userInput) => {
+        if (userInput !== null && userInput !== '') {
+          console.log('qid:',qid)
+          console.log(`User entered: ${userInput}`);
+          AddAnswer(qid,userInput)
+          alert('answer added !!')
+        } else if (userInput === null) {
+          console.log('User cancelled the prompt');
+        } else {
+          console.log('User entered an empty string');
+        }
+      }
+    );
+  }
   const QuestionLoad = () => {
     return questions.map((q, idx) => {
       return (
@@ -140,17 +200,23 @@ const QuestionsAnswers = () => {
                 }}
               />
 
-              <Text style={styles.chatText}>{q.answers_count} Answers</Text>
+              <Text style={styles.chatText}>
+                {q.answers_count > 0 ?
+                <Text>{q.answers_count} </Text> : <Text>No </Text>}
+                {q.answers_count === 1 ? <Text>Answer</Text> : <Text>Answers</Text>} 
+              </Text>
             </TouchableOpacity>
-            {q.correctlyAnswered === true ? (
+            {q.answers_count === 0 ? null : (
+            q.correctlyAnswered ? (
               <Ionicons
                 name="checkmark-circle-outline"
                 color={"#03ba55"}
                 size={24}
               />
             ) : (
-              <Text>No Correct Answer</Text>
-            )}
+              <Text>No Correct answer</Text>
+            )
+          )}
             {/* <Ionicons name="checkmark-circle-outline" color={'#03ba55'} size={24}/> */}
           </View>
         </View>
@@ -215,7 +281,115 @@ const QuestionsAnswers = () => {
   const handleTextChange = (text) => {
     setText(text);
   };
+  const MapAnswers = () => {
+    return (
+      answers.map((a, idx) => {
+
+        return(
+          <View key={idx} style={{marginBottom:20}}>
+            <View style={{flexDirection:'row',gap:10}}>
+            <View style={{ borderRadius: "100",width:50, overflow: "hidden" }}>
+              <Image
+              source={{uri: 'http://192.168.0.105:8000/'+a.get_user.profilepicture}}
+                //source={require("../images/profilepic.jpg")}
+                style={{ width: 50, height: 50,backgroundColor:'#ccc' }}
+                resizeMode='contain'
+              />
+            </View>
+            <View style={{gap:5}}>
+            <Text style={{fontWeight:"500"}}>{a.get_user.name}</Text>
+            <Text style={{fontSize:18}}>{a.answer} {a.answered ? <Ionicons name="checkbox" color={'#03ba55'} size={20}/> : null}</Text>
+            </View>
+            
+            </View>
+            {idx !== answers.length - 1 ? <View style={{height:1.5,backgroundColor:'#ccc',marginTop:10}} /> : null}
+          </View>
+        
+        )
+      })
+    )
+    
+  }
+  const AddQuestionToDb = async (q) => {
+    console.log(q)
+    const token = await AsyncStorage.getItem('token')
+    if(token !== null) {
+      try{
+        console.log('token not null')
+        const formData = new FormData()
+        formData.append('question',q)
+        const response = await fetch('http://192.168.0.105:8000/api/askQuestion',{
+          method:"POST",
+          headers:{
+            
+            "Authorization":`Bearer ${token}`
+          },
+          body:formData
+        })
+        const resData = await response.json()
+        console.log(resData.message)
+        getQuestions()
+
+      }
+      catch(err){
+        console.log(err)
+      }
+    }
+  }
+  const AskQuestion = () => {
+    Alert.prompt(
+      'Ask Your Question',
+      null,
+      (text) => {
+        if (text === null) {
+          // User clicked "Cancel"
+          console.log('Prompt canceled');
+          alert('cancel')
+        } else {
+          // User entered text
+          if( text !== ''){
+            console.log('User entered:', text);
+            AddQuestionToDb(text)
+          }
+          else{
+            alert('Your Field is Empty !')
+          }
+          
+        }
+      }
+    );
+  }
   const [show, setShow] = useState(false);
+  const [isFocused,setIsFocused] =useState(false)
+  const handleFocus = () => {
+    setIsFocused(true);
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+  };
+  // const [keyboardHeight, setKeyboardHeight] = useState(0);
+  // useEffect(() => {
+  //   const keyboardDidShowListener = Keyboard.addListener(
+  //     'keyboardDidShow',
+  //     (event) => {
+  //       setKeyboardHeight(event.endCoordinates.height);
+  //     }
+  //   );
+
+  //   const keyboardDidHideListener = Keyboard.addListener(
+  //     'keyboardDidHide',
+  //     () => {
+  //       setKeyboardHeight(0);
+  //     }
+  //   );
+
+  //   return () => {
+  //     keyboardDidShowListener.remove();
+  //     keyboardDidHideListener.remove();
+  //   };
+  // }, []);
+  const [answerfield,setAnswerField] = useState('')
   return (
     <Provider>
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -261,7 +435,7 @@ const QuestionsAnswers = () => {
                 </TouchableOpacity>
               ) : null}
             </View>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={AskQuestion}>
               <Button
                 mode="elevated"
                 buttonColor="#03ba55"
@@ -296,18 +470,45 @@ const QuestionsAnswers = () => {
             show={show}
             onDismiss={() => {
               setShow(false);
+              if(!Keyboard.dismiss()){
+                Keyboard.dismiss()
+              }
             }}
             enableBackdropDismiss
           >
             {answers.length > 0 ? (
-              answers.map((a, idx) => {
-                return <Text key={idx}>{a.answer}</Text>;
-              })
+              <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={{ flex: 1 }}
+            >
+              <ScrollView contentContainerStyle={{ padding: 20 }}>
+                <MapAnswers />
+              </ScrollView>
+              
+            </KeyboardAvoidingView>
             ) : (
-              <View style={styles.noanswers}>
+              <ScrollView contentContainerStyle={styles.noanswers}>
                 <Text style={styles.noanswerstext}>No Answers yet.</Text>
-              </View>
+                <Text style={[styles.noanswerstext,{color:"#ccc",marginTop:5,fontSize:16}]}>Be The First One to Answer</Text>
+              </ScrollView>
             )}
+            <View style={[{flexDirection:'row', height: 50, backgroundColor: '#fff', width: '100%',borderTopWidth:2,borderTopColor:"#ccc" }, isFocused && styles.focusedTextInput]}>
+              <View style={{justifyContent:'center',alignItems:'center',width:50,height:50}}>
+                  <Feather name="send" size={20} color={'#808080'}/>
+                </View>
+                <TextInput
+                placeholder={'Add An Answer'} 
+                style={{width:'72.7%',height:'100%',paddingLeft:5}} 
+                onFocus={handleFocus} 
+                onBlur={handleBlur}
+                value={answerfield}
+                onChangeText={(text)=>setAnswerField(text)}
+                />
+                {/* <Text>{keyboardHeight}</Text> */}
+                <TouchableOpacity onPress={()=>AddAnswer(questionIdToAnswer)} disabled={answerfield === '' ? true : false} style={{justifyContent:'center',alignItems:'center',backgroundColor:'#4090db',width:50,height:50}}>
+                  <Feather name="check" size={20} color={answerfield === '' ?'#ccc' : '#fff'}/>
+                </TouchableOpacity>
+              </View>
           </BottomSheet>
         </View>
       </TouchableWithoutFeedback>
@@ -385,5 +586,8 @@ const styles = StyleSheet.create({
   noanswerstext: {
     fontSize: 18,
     fontWeight: "bold",
+  },
+  focusedTextInput: {
+    marginBottom: 167,
   },
 });
