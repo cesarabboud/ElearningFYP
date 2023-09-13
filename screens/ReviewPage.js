@@ -34,7 +34,7 @@ const ListReview = ({ item }) => {
           }}
         >
           <Image
-            source={{uri:'http://192.168.0.105:8000/'+item.get_user.profilepicture}}
+            source={{uri:'http://192.168.0.107:8000/'+item.get_user.profilepicture}}
             style={{ width: 50, height: 50 }}
           />
         </View>
@@ -133,7 +133,7 @@ const Reviews = () => {
     const token = await AsyncStorage.getItem('token')
     if(token !==null) {
       try{
-        const response = await fetch('http://192.168.0.105:8000/api/getCourseRev/'+id,{
+        const response = await fetch('http://192.168.0.107:8000/api/getCourseRev/'+id,{
           method:"GET",
           headers:{
           'Authorization':`Bearer ${token}`

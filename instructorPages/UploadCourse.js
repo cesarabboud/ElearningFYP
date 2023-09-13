@@ -34,9 +34,10 @@ const UploadCourse = () => {
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
+      allowsEditing: false,
       aspect: [4, 3],
       quality: 1,
+
     });
 
     if (!result.canceled) {
@@ -62,7 +63,7 @@ const UploadCourse = () => {
     if (token !== null) {
       try {
         const response = await fetch(
-          "http://192.168.0.105:8000/api/allCategories",
+          "http://192.168.0.107:8000/api/allCategories",
           {
             method: "GET",
             headers: {
@@ -142,7 +143,7 @@ const UploadCourse = () => {
         formData.append("category", category);
 
         const response = await fetch(
-          "http://192.168.0.105:8000/api/uploadPDF",
+          "http://192.168.0.107:8000/api/uploadPDF",
           {
             method: "POST",
             body: formData,

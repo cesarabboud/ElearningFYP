@@ -6,10 +6,10 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import {Share} from 'expo'
-const MyWebComponent = ({route}) => {
+const MyWebComponent = ({route,navigation}) => {
     const [visible,setVisible] = React.useState(false)
     const [isLoading, setIsLoading] = useState(false)
-    const { pdfurl } = route.params
+    const { pdfurl,pdftitle,pdftype } = route.params
     const handleDownload = () => {
       setIsLoading(true)
       downloadFile(pdfurl)
@@ -23,6 +23,16 @@ const MyWebComponent = ({route}) => {
       console.error('Error opening URL:', error);
     }
   };
+  const handleDownloadPPT = () => {
+    setIsLoading(true);
+    // Replace 'downloadFile' with your actual download function.
+    downloadFile(pdfurl)
+      .then(() => setIsLoading(false))
+      .catch((error) => {
+        console.error('Error downloading PowerPoint:', error);
+        setIsLoading(false);
+      });
+  };
     const ActivityIndicatorComponent = () =>{
         return(
             <View style={styles.activityIndicatorStyle}>
@@ -34,7 +44,12 @@ const MyWebComponent = ({route}) => {
     <>
     <StatusBar barStyle={'dark-content'} />
     <SafeAreaView style={styles.container}>
-    <Ionicons onPress={handleDownload} name="share-social-outline" style={{alignSelf:'flex-end',marginRight:10,marginTop:10}} size={24}/>
+      <View style={{flexDirection:'row',margin:10,justifyContent:'space-between',alignItems:'center'}}>
+        <Ionicons onPress={()=>navigation.goBack()} name='chevron-back' size={24} />
+        <Text style={{fontWeight:"600",fontSize:20}}>{pdftitle}.{pdftype}</Text>
+        <Ionicons onPress={pdfurl.split(".").pop() === 'pptx' ? handleShare : handleDownloadPPT} name="share-social-outline" size={24}/>
+
+      </View>
     <WebView
       
       source={{ uri: pdfurl }}
@@ -51,7 +66,7 @@ const MyWebComponent = ({route}) => {
         bounces={false}
         onLoadStart={()=>setVisible(true)}
         onLoad={()=>setVisible(false)}
-        menuItems={[{ label: 'Tweet', key: 'tweet' }, { label: 'Save for later', key: 'saveForLater' },{label:'Whatsapp',key:'Share with Whatsapp'}]}
+        menuItems={[{ label: 'Tweet', key:'tweet' }, { label: 'Save for later', key: 'saveForLater' },{label:'Whatsapp',key:'Share with Whatsapp'}]}
     />
     { visible ? <ActivityIndicatorComponent/> : null}
     </SafeAreaView>

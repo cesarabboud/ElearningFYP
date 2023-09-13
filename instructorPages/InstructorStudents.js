@@ -33,7 +33,7 @@ const StudentsList = () => {
   const getmyStd = async () =>{
     const val = await AsyncStorage.getItem('token')
     try{
-      const response = await fetch('http://192.168.0.105:8000/api/getInstructorProfileInfo',{
+      const response = await fetch('http://192.168.0.107:8000/api/getInstructorProfileInfo',{
         method: 'GET',
         headers:{
           "Accept": 'application/json',
@@ -206,7 +206,7 @@ const StudentsList = () => {
                 }}
               >
                 <Image
-                  source={require("../images/profilepic.jpg")}
+                  source={{uri:'http://192.168.0.107:8000/'+item.profilepicture}}
                   style={{ width: 35, height: 35 }}
                 />
               </View>

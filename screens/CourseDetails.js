@@ -11,7 +11,7 @@ import {
 } from "react-native";
 //import Animated,{ FadeInRight } from 'react-native-reanimated'
 import React, { useState, useEffect } from "react";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
 import { IconButton } from "react-native-paper";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -25,7 +25,7 @@ const CourseDetails = ({route}) => {
       const token = await AsyncStorage.getItem('token')
       if(token!==null){
         try{
-          const response = await fetch('http://192.168.0.105:8000/api/courseDetails/'+courseId,{
+          const response = await fetch('http://192.168.0.107:8000/api/courseDetails/'+courseId,{
             method:"GET",
             headers:{
               "Authorization":`Bearer ${token}`
@@ -38,16 +38,42 @@ const CourseDetails = ({route}) => {
           // console.log('course cat :',course.get_category.name)
           // console.log(resData.course.get_category.name)
           setNbrev(resData.nbrev)
-          
+          console.log('nb:'+nbrev)
         }
         catch(err){
           console.log(err)
         }
       }
     }
+    const [owned,setIsOwned] = useState(null)
+    const CheckIfPurchased = async () => {
+      const token = await AsyncStorage.getItem('token')
+      if(token !==null) {
+        try{
+          const response = await fetch('http://192.168.0.107:8000/api/canReview/'+courseId,{
+            method:'GET',
+            headers:{
+              'Authorization':`Bearer ${token}`
+            }
+          })
+          const resData = await response.json()
+          // console.log(resData.message)
+          resData.message === 'owned' ? setIsOwned(true) : setIsOwned(false)
+          console.log(owned)
+        }
+        catch(err){
+          console.log(err)
+        }
+      }
+    }
+  const isFocused = useIsFocused()
   useEffect(()=>{
-    DetailsDeCours()
-  },[])
+    if(isFocused){
+      DetailsDeCours()
+      CheckIfPurchased()
+    }
+    
+  },[isFocused])
   const [showMore, setShowMore] = useState(false);
   const navigation = useNavigation();
   const toggleShowMore = () => {
@@ -56,8 +82,10 @@ const CourseDetails = ({route}) => {
 
   return (
     <ScrollView>
-      <Image source={{uri:'http://192.168.0.105:8000/'+course.thumbnail}}
+      <Image source={{uri:'http://192.168.0.107:8000/'+course.thumbnail}}
       style={{width:'100%',height:200,marginBottom:20}}
+      resizeMode="cover"
+      //or resizeMode = contain
       />
       {/* <TouchableOpacity style={styles.playBtnView}>
         <View>
@@ -224,7 +252,10 @@ const CourseDetails = ({route}) => {
             />
           </View>
         </View>
-        <View style={{ height: 1, backgroundColor: "#ccc" }} />
+        {
+          nbrev > 0 ? <View style={{ height: 1, backgroundColor: "#ccc" }} /> : null
+        }
+        
         <TouchableOpacity
           onPress={() => navigation.navigate("ReviewPage",{
             id:courseId
@@ -250,8 +281,11 @@ const CourseDetails = ({route}) => {
           ) : null
         }
         
-        <View style={{ height: 1, backgroundColor: "#ccc" }} />
-        <TouchableOpacity
+        
+        {
+          owned ? <>
+          <View style={{ height: 1, backgroundColor: "#ccc" }} />
+          <TouchableOpacity
           onPress={() => navigation.navigate("AddReview",{
             id:courseId,
             course:course
@@ -271,7 +305,10 @@ const CourseDetails = ({route}) => {
             iconColor="#000"
             style={{ margin: 0 }}
           />
-        </TouchableOpacity>
+        </TouchableOpacity> 
+          </>: null
+        }
+        
         {
           nbrev === 0 ? <View style={{ height: 1, backgroundColor: "#ccc",marginBottom:20 }} /> : null
         }

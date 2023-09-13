@@ -98,7 +98,7 @@ const LoginScreen = ({ navigation }) => {
       console.log('password field is empty!')
       return
     }
-    await fetch("http://192.168.0.105:8000/api/login", {
+    await fetch("http://192.168.0.107:8000/api/login", {
       method: "POST",
       headers: {
         "Accept": "application/json",

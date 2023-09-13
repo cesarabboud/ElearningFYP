@@ -5,6 +5,7 @@ import { Button, IconButton } from "react-native-paper";
 import React,{useState,useEffect} from "react";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ToastMessage from "./ToastMessage/ToastMsg";
 const App = ({route}) => {
   const {category,types,minval,maxval,rating,sign} = route.params
   // console.log(minval)
@@ -17,12 +18,8 @@ const App = ({route}) => {
       const token = await AsyncStorage.getItem('token')
       if(token!==null){
         try{
-          //sending a regular json caused an error so i sent the title using formdata
-          
-          // formData.append('types',types)
-          // formData.append('minPrice',minval)
-          // formData.append('maxPrice',maxval)
-          const response = await fetch('http://192.168.0.105:8000/api/searchCourseByFilters',{
+        
+          const response = await fetch('http://192.168.0.107:8000/api/searchCourseByFilters',{
             method:"POST",
             headers:{
               "Authorization":`Bearer ${token}`,
@@ -51,7 +48,41 @@ const App = ({route}) => {
     }
   useEffect(()=>{
     SearchByFilters()
-  },[])  
+  },[]) 
+  const [toastType, setToastType] = useState("info");
+  const toastRef = React.useRef(null);
+  const [msg,setMsg] = useState(null)
+  const handleShowToast = () => {
+    if (toastRef.current) {
+      toastRef.current.show();
+    }
+  };
+  const addItemToCart = async (id) => {
+    const token = await AsyncStorage.getItem('token')
+    if(token !== null){
+        try{
+            const response = await fetch('http://192.168.0.107:8000/api/addItemToCart/'+id,{
+                method:"POST",
+                headers:{
+                    "Authorization":`Bearer ${token}`
+                }
+            })
+            const resData = await response.json()
+            console.log(resData.message)
+            
+            setMsg(resData.message)
+            if(resData.message!== 'item already in cart!' && resData.message !== 'bought' ){
+                // navigation.replace('BottomTab', { screen: 'ShoppingCart' });
+                navigation.dispatch(StackActions.replace('BottomTab', { screen: 'ShoppingCart' }));
+                return
+            }
+            handleShowToast()
+        }
+        catch(err){
+            console.log(err)
+        }
+    }
+  }
   return (
     
     <View style={{ flex: 1, justifyContent: "center", padding: 20 ,backgroundColor:'#1E2a23' }}>
@@ -97,11 +128,12 @@ const App = ({route}) => {
             marginBottom:20
           }}
           entering={FadeInRight.delay((idx+1) * 500)}
+          key={idx.toString()}
         >
           <IconButton icon={"heart-outline"} iconColor="#03ba55"/>
           <View style={{alignSelf:'center'}}>
           <Image
-            source={{uri:'http://192.168.0.105:8000/'+prod.thumbnail}}
+            source={{uri:'http://192.168.0.107:8000/'+prod.thumbnail}}
             style={{ width: 200, height: 250,  marginBottom: 12}}
           />
           </View>
@@ -126,7 +158,7 @@ const App = ({route}) => {
             <Text style={{fontSize: 16, fontWeight: '600',color:"#fff"}}>${prod.price}</Text>
 
           </View>
-          <TouchableOpacity style={{borderWidth:2,borderColor:'#03ba55',height:45,justifyContent:'center',alignItems:'center',borderRadius:10}}>
+          <TouchableOpacity onPress={()=>addItemToCart(prod.id)} style={{borderWidth:2,borderColor:'#03ba55',height:45,justifyContent:'center',alignItems:'center',borderRadius:10}}>
             <Text style={{color:"#03ba55"}}>Add To Cart</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -144,6 +176,12 @@ const App = ({route}) => {
         </View>
         ) : null}
       </ScrollView>
+      <ToastMessage
+        type={toastType}
+        text="Info"
+        description={'' + msg === 'item already in cart!' ? 'Item Already In Cart!' : 'Item Already Bought!'}
+        ref={toastRef} 
+        />
     </View>
   );
   }

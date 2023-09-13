@@ -48,7 +48,7 @@ const SearchBar = () => {
     const token = await AsyncStorage.getItem('token')
     if(token !==null){
       try{
-        const response = await fetch('http://192.168.0.105:8000/api/allCategories',{
+        const response = await fetch('http://192.168.0.107:8000/api/allCategories',{
           method:'GET',
           headers:{
             "Accept": 'application/json',
@@ -72,7 +72,7 @@ const SearchBar = () => {
   const [types,setTypes] = useState([])
   const getTypes = async () => {
     try{
-      const response = await fetch('http://192.168.0.105:8000/api/types',{
+      const response = await fetch('http://192.168.0.107:8000/api/types',{
         method:'GET',
         headers:{
           "Accept": 'application/json',
@@ -497,13 +497,13 @@ const SearchBar = () => {
                     sign !== null ? (
                       <>
                       
-                      <Feather onPress={()=> ratingValue > 0 ? setRatingValue(ratingValue-1) : null}  name="minus" size={18}  />
+                      <Feather onPress={()=> ratingValue > 0 ? setRatingValue(ratingValue-1) : null}  name="minus" size={18} disabled={ratingValue===0 ? true : false}  />
                       
                       <View style={{padding:10,backgroundColor:'#03ba55',justifyContent:'center',alignItems:'center',width:35,height:35,borderRadius:5}}>
                       <TextInput style={{fontSize:22,fontWeight:"600",color:"#fff"}} value={ratingValue + ''} onChangeText={(text)=>handleValueChange(text)} keyboardType="numeric" />
                       </View>
                       
-                      <Feather onPress={()=> ratingValue < 5 ? setRatingValue(ratingValue+1) : null}  name="plus" size={18}  />
+                      <Feather onPress={()=> ratingValue < 5 ? setRatingValue(ratingValue+1) : null}  name="plus" size={18}/>
                       
                       </>
                     ) : null

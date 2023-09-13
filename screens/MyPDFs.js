@@ -32,7 +32,7 @@ const MyPDFs = () => {
     const token = await AsyncStorage.getItem("token");
     if (token !== null) {
       try {
-        const response = await fetch("http://192.168.0.105:8000/api/getPDFs", {
+        const response = await fetch("http://192.168.0.107:8000/api/getPDFs", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -107,7 +107,7 @@ const MyPDFs = () => {
                   width: "80%",
                   fontWeight: "600",
                 }}
-                placeholder="Search"
+                placeholder="Search My PDFs"
                 value={searchText}
                 onChangeText={handleSearchTextChange}
               />
@@ -130,7 +130,7 @@ const MyPDFs = () => {
               )}
             </View>
           </View>
-          <View>
+          {/* <View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View
                 style={{
@@ -168,7 +168,7 @@ const MyPDFs = () => {
                 ))}
               </View>
             </ScrollView>
-          </View>
+          </View> */}
           <ScrollView
             contentContainerStyle={{
               flexDirection: "row",
@@ -188,16 +188,21 @@ const MyPDFs = () => {
                     alignItems: "center",
                     gap: 5,
                   }}
+                  key={idx}
                 >
                   <TouchableOpacity onPress={()=>navigation.navigate("MyWebComponent",{
-                    pdfurl:'http://192.168.0.105:8000/'+pdf.link
+                    pdfurl:'http://192.168.0.107:8000/'+pdf.link,
+                    pdftitle:pdf.title,
+                    pdftype:pdf.type
                   })}>
-                  <Image source={{uri:'http://192.168.0.105:8000/'+pdf.thumbnail}} style={{height:120,width:90}}/>
+                  <Image source={{uri:'http://192.168.0.107:8000/'+pdf.thumbnail}} style={{height:120,width:100}}/>
                   </TouchableOpacity>
                   
                   <Text
                     style={{
                       color: "#fff",
+                      width:pdf.title.length > 15 ? 80 : null,
+                      textAlign:'center'
                     }}
                   >
                     {pdf.title}

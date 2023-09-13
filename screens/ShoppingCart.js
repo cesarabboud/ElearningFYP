@@ -33,7 +33,7 @@ const ShoppingCart = () => {
     if (token !== null) {
       try {
         const response = await fetch(
-          "http://192.168.0.105:8000/api/displayCart",
+          "http://192.168.0.107:8000/api/displayCart",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -64,7 +64,7 @@ const ShoppingCart = () => {
     const token = await AsyncStorage.getItem('token')
     if(token !== null){
         try{
-            const response = await fetch('http://192.168.0.105:8000/api/addItemToCart/'+id,{
+            const response = await fetch('http://192.168.0.107:8000/api/addItemToCart/'+id,{
                 method:"POST",
                 headers:{
                     "Authorization":`Bearer ${token}`
@@ -85,7 +85,7 @@ const ShoppingCart = () => {
     const token = await AsyncStorage.getItem('token')
     if(token!==null){
       try{
-        const response = await fetch('http://192.168.0.105:8000/api/removeItemFromCart/'+id,{
+        const response = await fetch('http://192.168.0.107:8000/api/removeItemFromCart/'+id,{
           method:"GET",
           headers:{
             "Authorization":`Bearer ${token}`
@@ -110,7 +110,7 @@ const ShoppingCart = () => {
     const token = await AsyncStorage.getItem('token')
     if(token !==null){
       try{
-        const response = await fetch('http://192.168.0.105:8000/api/removeAll',{
+        const response = await fetch('http://192.168.0.107:8000/api/removeAll',{
           method:"GET",
           headers:{
             "Authorization":`Bearer ${token}`
@@ -278,7 +278,9 @@ const ShoppingCart = () => {
         duration={7000}
         action={{
           label: 'Undo',
-          
+          labelStyle:{
+            color:'#03ba55'
+          },
           onPress: () => {
             // Do something
             addItemToCart(lastId)
@@ -295,7 +297,7 @@ const ShoppingCart = () => {
         <View style={{ height: Constants.statusBarHeight }} />
         <View style={{gap:5,flexDirection:'row',justifyContent:'flex-end',alignItems:'center',backgroundColor:"#dcdcdc",marginVertical:20,padding:10,paddingRight:20}}>
           <Text style={{textAlign:"right",fontSize:18,fontWeight:"600",}}>Clear All</Text>
-          <Ionicons onPress={clearCart} name="trash" size={16}/>
+          <Feather onPress={clearCart} name="trash-2" size={16}/>
         </View>
         <ScrollView>
         <View style={styles.cartContent}>
@@ -317,7 +319,7 @@ const ShoppingCart = () => {
                     >
                       <Image
                         // source={{uri: user.profilepicture}}
-                        source={{uri:'http://192.168.0.105:8000/'+c.thumbnail}}
+                        source={{uri:'http://192.168.0.107:8000/'+c.thumbnail}}
                         style={{
                           width: 80,
                           height: 80,
@@ -327,7 +329,7 @@ const ShoppingCart = () => {
                       />
                     </View>
                     <View style={{ justifyContent: "center" }}>
-                      <Text style={styles.text}>{c.title}</Text>
+                      <Text style={styles.text}>{c.title.length > 15 ? c.title.slice(0,15)+'...' : c.title}</Text>
                       <Text style={[styles.text,{color:"#02ba5d"}]}>${c.price}.00</Text>
                     </View>
                   </View>
@@ -384,21 +386,25 @@ const ShoppingCart = () => {
         </TouchableOpacity>
         
         </ScrollView>
+        {
+          cartitems.length > 1 ? <Snackbar
+          visible={visible}
+          onDismiss={onDismissSnackBar}
+          duration={7000}
+          action={{
+            label: 'Undo',
+            labelStyle:{
+              color:'#03ba55'
+            },
+            onPress: () => {
+              // Do something
+              addItemToCart(lastId)
+            },
+          }}>
+          Item Deleted From Cart !
+        </Snackbar> : null
+        }
         
-        <Snackbar
-        visible={visible}
-        onDismiss={onDismissSnackBar}
-        duration={7000}
-        action={{
-          label: 'Undo',
-          
-          onPress: () => {
-            // Do something
-            addItemToCart(lastId)
-          },
-        }}>
-        Item Deleted From Cart !
-      </Snackbar>
       </View>
     );
   }

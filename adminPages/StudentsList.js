@@ -19,6 +19,7 @@ import * as Sharing from "expo-sharing";
 import { Buffer as NodeBuffer } from "buffer";
 import * as FileSystem from "expo-file-system";
 import ExcelJS from "exceljs";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const StudentsList = () => {
   const [searchText, setSearchText] = useState("");
   const [showCancelButton, setShowCancelButton] = useState(false);
@@ -119,7 +120,7 @@ const StudentsList = () => {
 
   const getAllStudents = async () => {
     try{
-      const response = await fetch('http://192.168.0.105:8000/api/getAllStudents',{
+      const response = await fetch('http://192.168.0.107:8000/api/getAllStudents',{
         method:'GET',
       })
       const resData = await response.json()
@@ -164,7 +165,26 @@ const StudentsList = () => {
     setShowSortModal(false);
   };
 
-  
+  const DeleteStudent = async (id) =>{
+    const token = await AsyncStorage.getItem('token')
+    try{
+      const response = await fetch('http://192.168.0.107:8000/api/deleteAccUser/'+id,
+      {
+        method:'GET',
+        headers:{
+          'Accept':'applciation/json',
+          'Content-Type':'application/json' ,
+          'Authorization' : `Bearer ${token}`
+        },
+      })
+      const resData = response.json()
+      // console.log(resData.message)
+      getAllStudents();
+    }
+    catch(err){
+      console.log(err)
+    }
+  }
 
   const MyTable = () => {
     const [page, setPage] = React.useState(0);
@@ -196,7 +216,7 @@ const StudentsList = () => {
             <DataTable.Cell>
               <View style={{ borderRadius: "100", overflow: "hidden",justifyContent:'center',alignItems:'center' }}>
                 <Image
-                  source={{uri:item.profilepicture}}
+                  source={{uri:'http://192.168.0.107:8000/'+item.profilepicture}}
                   resizeMode='stretch'
                   style={{ width: 35, height: 35 ,}}
                 />
@@ -205,7 +225,7 @@ const StudentsList = () => {
             <DataTable.Cell>{item.name}</DataTable.Cell>
             <DataTable.Cell>{item.email}</DataTable.Cell>
             <DataTable.Cell style={{alignItems:'center',justifyContent:'center'}}>
-              <IconButton style={{margin:-3}} icon={"close"} iconColor="red" />
+              <IconButton onPress={()=>DeleteStudent(item.id)} style={{margin:-3}} icon={"close"} iconColor="red" />
             </DataTable.Cell>
           </DataTable.Row>
         ))}
@@ -239,6 +259,8 @@ const StudentsList = () => {
             backgroundColor: "#03ba55",
             borderBottomLeftRadius: 20,
             borderBottomRightRadius: 20,
+            gap:10,
+            padding:10
           }}
         >
           <Text

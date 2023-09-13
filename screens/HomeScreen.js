@@ -1,4 +1,4 @@
-import { useNavigation } from "@react-navigation/native";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 import React, { useRef, useState, useEffect } from "react";
 import { SafeAreaView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -18,6 +18,7 @@ import TestScreen from "./testScreen";
 import { StatusBar } from "react-native";
 import { IconButton } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from "@expo/vector-icons";
 const HomeScreen = ({route}) => {
   // const [currentTime, setCurrentTime] = useState("");
   const [cat,setCat] = useState([])
@@ -25,7 +26,7 @@ const HomeScreen = ({route}) => {
   const [uname,setUname] = useState('')
   const getHomeScrData = async () =>{
     const token = await AsyncStorage.getItem('token')
-    const response = await fetch('http://192.168.0.105:8000/api/HomeScr',{
+    const response = await fetch('http://192.168.0.107:8000/api/HomeScr',{
       headers:{
         "Authorization":`Bearer ${token}`
       }
@@ -72,6 +73,17 @@ const HomeScreen = ({route}) => {
   };*/
   
   const navigation = useNavigation();
+  const [isSelected,setIsSelected] = useState(-1)
+  const handleSelection = (id) => {
+    setIsSelected(id)
+    console.log(isSelected)
+  }
+  const navigateToCourseDetails = (id,category) => {
+    navigation.navigate("CourseDetails",{
+      cid:id,
+      cat:category
+    })
+  }
   return (
     <ImageBackground
       source={require("../images/homeNoLogo.png")}
@@ -177,9 +189,11 @@ const HomeScreen = ({route}) => {
                   />
                 </TouchableOpacity>
               </ImageBackground>
+              
+              
               <View style={styles.belowVidThumbnail}>
                 <Text>Title</Text>
-                <Text>Durartion</Text>
+                <Text>Durationnn</Text>
               </View>
             </View>
           </ScrollView>
@@ -194,7 +208,7 @@ const HomeScreen = ({route}) => {
           <View style={{ backgroundColor: "#fff" }}>
             <View style={styles.catView}>
               <Text
-                style={{ fontSize: 24, fontWeight: "500", color: "#1E2A23" }}
+                style={{ fontSize: 24, fontWeight: "bold", color: "#1E2A23" }}
               >
                 Categories
               </Text>
@@ -246,10 +260,10 @@ const HomeScreen = ({route}) => {
               opacity: 0.6,
             }}
           />
-          <View>
+          <View style={{backgroundColor:"#fff"}}>
             <View style={styles.catView}>
               <Text
-                style={{ fontSize: 24, fontWeight: "500", color: "#1E2A23" }}
+                style={{ fontSize: 24, fontWeight: "bold", color: "#1E2A23" }}
               >
                 Top Rated
               </Text>
@@ -257,14 +271,115 @@ const HomeScreen = ({route}) => {
                 <Text style={styles.seeText}>See All</Text>
               </TouchableOpacity>
             </View>
+            <View style={{marginHorizontal:20,gap:25}}>
             {
               topRated.map((tr,idx)=>{
-                return(
-                  <Text key={idx}>{idx + 1}) {tr.title} Rating: {tr.rating}/5</Text>
-                )
-                
+                if(tr.id !== isSelected){
+                  return(
+                    <TouchableOpacity onPress={()=>handleSelection(tr.id)} activeOpacity={.8} key={idx.toString()} style={{
+                      flexDirection:'row',
+                      justifyContent:'space-between',
+                      alignItems:'center',
+                      // backgroundColor:'red',
+                      padding:10,
+                      borderRadius:9
+                      }}>
+                      <View style={{flexDirection:'row',gap:10}}>
+                      <Image
+                      source={{uri:'http://192.168.0.107:8000/'+tr.thumbnail}}
+                      style={{width:80,height:80,overflow:'hidden',borderRadius:7}}
+                      />
+                      <View style={{gap:10}}>
+                        <Text style={{fontWeight:"bold",fontSize:16, color:"#181818"}}>{tr.title}</Text>
+                        <View style={{flexDirection:'row',gap:3}}>
+                          <Ionicons name="star" />
+                          <Text>{tr.rating}.0</Text>
+                        </View>
+                        <Text style={{fontWeight:"bold",fontSize:22,color:"#03B960"}}>${tr.price}</Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity>
+                    <LinearGradient
+                      key={idx}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  colors={["#0AB072", "#02BA5D", "#11B741"]}
+                  style={{
+                    // width: 200,
+                    // height: 120,
+                    // justifyContent: "center",
+                    borderRadius: 100,
+                    padding:10,
+                    width:40,
+                    height:40,
+                    justifyContent:'center',
+                    alignItems:'center'
+                  }}
+                >
+                  <Ionicons name="arrow-forward" size={16} color={'#fff'}/>
+                </LinearGradient>
+                    </TouchableOpacity>
+                    
+                </TouchableOpacity>
+                  )
+                }
+                else{
+                  return (
+
+                    <TouchableOpacity onPress={()=>handleSelection(tr.id)} activeOpacity={.8} key={idx.toString()}>
+                    <LinearGradient
+                    style={{
+                      flexDirection:'row',
+                      justifyContent:'space-between',
+                      alignItems:'center',
+                      backgroundColor:'red',
+                      padding:10,
+                      borderRadius:9,
+                      
+                      }}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      colors={["#0AB072", "#02BA5D", "#11B741"]}
+                    >
+                      <View style={{flexDirection:'row',gap:10}}>
+                      <Image
+                      source={{uri:'http://192.168.0.107:8000/'+tr.thumbnail}}
+                      style={{width:80,height:80,overflow:'hidden',borderRadius:7}}
+                      />
+                      <View style={{gap:10}}>
+                        <Text style={{fontWeight:"bold",fontSize:16, color:"#f5f5f5"}}>{tr.title}</Text>
+                        <View style={{flexDirection:'row',gap:3}}>
+                          <Ionicons name="star" color={"#f5f5f5"} />
+                          <Text style={{color:"#f5f5f5"}}>{tr.rating}.0</Text>
+                        </View>
+                        <Text style={{fontWeight:"bold",fontSize:22,color:"#f5f5f5"}}>${tr.price}</Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity>
+                    <TouchableOpacity onPress={()=>navigateToCourseDetails(tr.id,tr.get_category.name)} style={{
+                    width:50,
+                    height:50,
+                    backgroundColor:'#fff',
+                    borderRadius: 100,
+                    padding:10,
+                    width:40,
+                    height:40,
+                    justifyContent:'center',
+                    alignItems:'center'}}>
+                  <Ionicons  name="arrow-forward" size={16} color={'#03ba55'}/>
+                </TouchableOpacity>
+                    </TouchableOpacity>
+                    
+                </LinearGradient>
+                    </TouchableOpacity>
+
+                    
+                  )
+                }
               })
             }
+            </View>
+            
           </View>
         </SafeAreaView>
       </ScrollView>
@@ -311,7 +426,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     opacity: 0.8,
-    borderRadius:10
+    borderRadius:10,
+    overflow:'hidden'
   },
   belowVidThumbnail: {
     justifyContent: "space-between",

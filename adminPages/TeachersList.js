@@ -122,7 +122,7 @@ const TeachersList = () => {
   const [teachersList,setTeachersList] = useState([])
   const getAllTeachers= async () => {
     try{
-      const response = await fetch('http://192.168.0.105:8000/api/getAllTeachers',{
+      const response = await fetch('http://192.168.0.107:8000/api/getAllTeachers',{
         method:'GET',
       })
       const resData = await response.json()
@@ -186,7 +186,7 @@ const TeachersList = () => {
   const DeleteTeacher = async (id) =>{
     const token = await AsyncStorage.getItem('token')
     try{
-      const response = await fetch('http://192.168.0.108:8000/api/deleteAccUser/'+id,
+      const response = await fetch('http://192.168.0.107:8000/api/deleteAccUser/'+id,
       {
         method:'GET',
         headers:{
@@ -235,7 +235,7 @@ const TeachersList = () => {
             <DataTable.Cell>
               <View style={{ borderRadius: "100", overflow: "hidden" }}>
                 <Image
-                  source={require("../images/profilepic.jpg")}
+                  source={{uri:'http://192.168.0.107:8000/'+item.profilepicture}}
                   style={{ width: 35, height: 35 }}
                 />
               </View>
@@ -277,6 +277,8 @@ const TeachersList = () => {
             backgroundColor: "#03ba55",
             borderBottomLeftRadius: 20,
             borderBottomRightRadius: 20,
+            gap:10,
+            padding:10
           }}
         >
           <Text

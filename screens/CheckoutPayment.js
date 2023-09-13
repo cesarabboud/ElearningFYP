@@ -76,7 +76,7 @@ const StripeGateway = ({route}) => {
     const token = await AsyncStorage.getItem('token')
     if(token !==null) {
       try{
-        const response = await fetch('http://192.168.0.105:8000/api/checkoutCart',{
+        const response = await fetch('http://192.168.0.107:8000/api/checkoutCart',{
           method:"POST",
           headers:{
             "Authorization":`Bearer ${token}`

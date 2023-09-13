@@ -23,9 +23,8 @@ const width = Dimensions.get("window").width;
 const AddReview = ({route}) => {
   const [text, setText] = useState("");
   const {id,course} = route.params
-  console.log(id)
+  // console.log(id)
   const characterLimit = 300;
-  const [isOwned,setIsOwned] = useState(false)
   const handleTextChange = (newText) => {
     if (newText.length <= characterLimit) {
       setText(newText);
@@ -39,77 +38,104 @@ const AddReview = ({route}) => {
 
   const [modalVisible, setModalVisible] = useState(false);
 
-  const handleSubmitReview = () => {
+  const handleSubmitReview = async () => {
     setModalVisible(true);
-  };
+    console.log(text.split(" ")
+    .filter(Boolean)
+    .join(" "))
+    console.log(text.replace(/\s+/g, " "))
 
-  const handleCloseModal = () => {
-    setModalVisible(false);
-  };
-  const CheckIfPurchased = async () => {
     const token = await AsyncStorage.getItem('token')
-    if(token !==null) {
+    if(token !== null){
       try{
-        const response = await fetch('http://192.168.0.105:8000/api/canReview/'+id,{
-          method:'GET',
+        const response = await fetch('http://192.168.0.107:8000/api/postReview/'+id,{
+          method:"POST",
           headers:{
-            'Authorization':`Bearer ${token}`
-          }
+            "Authorization":`Bearer ${token}`,
+            Accept: 'application.json',
+            'Content-Type': 'application/json'
+          },
+          body:JSON.stringify({
+            desc:text.split(" ").filter(Boolean).join(" "),
+            rating:starRating
+          })
         })
-        const resData = await response.json()
-        // console.log(resData.message)
-        resData.message === 'owned' ? setIsOwned(true) : null
-        console.log(isOwned)
+
       }
       catch(err){
         console.log(err)
       }
     }
-  }
-  const isFocused = useIsFocused()
-  useEffect(()=>{
-    CheckIfPurchased()
-  },[])
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    navigation.goBack()
+  };
+  // const CheckIfPurchased = async () => {
+  //   const token = await AsyncStorage.getItem('token')
+  //   if(token !==null) {
+  //     try{
+  //       const response = await fetch('http://192.168.0.105:8000/api/canReview/'+id,{
+  //         method:'GET',
+  //         headers:{
+  //           'Authorization':`Bearer ${token}`
+  //         }
+  //       })
+  //       const resData = await response.json()
+  //       // console.log(resData.message)
+  //       resData.message === 'owned' ? setIsOwned(true) : null
+  //       console.log(isOwned)
+  //     }
+  //     catch(err){
+  //       console.log(err)
+  //     }
+  //   }
+  // }
   const navigation = useNavigation()
-  const addItemToCart = async (id) => {
-    const token = await AsyncStorage.getItem('token')
+  // const addItemToCart = async (id) => {
+  //   const token = await AsyncStorage.getItem('token')
     
-    if(token !== null){
-        try{
-            const response = await fetch('http://192.168.0.105:8000/api/addItemToCart/'+id,{
-                method:"POST",
-                headers:{
-                    "Authorization":`Bearer ${token}`
-                }
-            })
-            const resData = await response.json()
-            console.log(resData.message)
-            if(resData.message!== 'item already in cart!'){
-                navigation.replace('BottomTab', { screen: 'ShoppingCart' });
-                return
-            }
-        }
-        catch(err){
-            console.log(err)
-        }
-    }
+  //   if(token !== null){
+  //       try{
+  //           const response = await fetch('http://192.168.0.107:8000/api/addItemToCart/'+id,{
+  //               method:"POST",
+  //               headers:{
+  //                   "Authorization":`Bearer ${token}`
+  //               }
+  //           })
+  //           const resData = await response.json()
+  //           console.log(resData.message)
+  //           if(resData.message!== 'item already in cart!'){
+  //               navigation.replace('BottomTab', { screen: 'ShoppingCart' });
+  //               return
+  //           }
+  //       }
+  //       catch(err){
+  //           console.log(err)
+  //       }
+  //   }
+  // }
+  // const UnownedComponent = () => {
+  //   return <View style={styles.container}>
+  //     <Text>You Cannot Review This Course Unless You Buy It.</Text>
+  //     <Button title="Add Course To Cart" onPress={()=>addItemToCart(id)} />
+  //   </View>
+  // }
+  const UploadReviewToDb = () => {
+    console.log(text.split(" ")
+    .filter(Boolean)
+    .join())
   }
-  const UnownedComponent = () => {
-    return <View style={styles.container}>
-      <Text>You Cannot Review This Course Unless You Buy It.</Text>
-      <Button title="Add Course To Cart" onPress={()=>addItemToCart(id)} />
-    </View>
-  }
-  const RegularComponent = () => {
-    return (
-      <ScrollView>
+  return (
+    <ScrollView>
 
     
     <TouchableWithoutFeedback onPress={() => {Keyboard.dismiss(); handleStarPress(0)}}>
       <View style={{ backgroundColor: "#fff", flex: 1 }}>
         <View style={{ flexDirection: "row", gap: 15, marginHorizontal: 30,marginVertical:20 }}>
           <Image
-            source={{uri: 'http://192.168.0.105:8000/'+course.thumbnail}}
+            source={{uri: 'http://192.168.0.107:8000/'+course.thumbnail}}
             style={{ width: 120, height: 120, borderRadius: 7 }}
           />
           <View style={{ width: width - 200, gap: 5, height: "100%" }}>
@@ -118,7 +144,7 @@ const AddReview = ({route}) => {
               {course.title}
             </Text>
             <Text style={{ color: "#959595", fontSize: 14 }}>
-              {course.description}
+              {course.description.length > 135 ? course.description.slice(0,135)+'...' : course.description}
             </Text>
           </View>
         </View>
@@ -183,7 +209,7 @@ const AddReview = ({route}) => {
     </View>
     
         </View>
-        <TouchableOpacity onPress={handleSubmitReview} style={{backgroundColor:'#02ba5d',justifyContent:'center',alignItems:'center',height:60,marginHorizontal:30,marginBottom:20,borderRadius:10}}>
+        <TouchableOpacity disabled={text === ''} onPress={handleSubmitReview} style={{backgroundColor:text !== '' ? '#02ba5d' : "#ccc",justifyContent:'center',alignItems:'center',height:60,marginHorizontal:30,marginBottom:20,borderRadius:10}}>
         <Text style={{textTransform:'uppercase',fontWeight:'600',fontSize:20,color:'#fff'}}>Submit Review</Text>
     </TouchableOpacity>
     <Modal
@@ -208,10 +234,6 @@ const AddReview = ({route}) => {
       </View>
     </TouchableWithoutFeedback>
     </ScrollView>
-    )
-  }
-  return (
-    isOwned ? <RegularComponent /> : <UnownedComponent />
   )
 };
 

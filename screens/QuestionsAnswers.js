@@ -7,7 +7,8 @@ import {
   TextInput,
   ScrollView,
   Image,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
+  TouchableHighlight
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import Constants from "expo-constants";
@@ -18,10 +19,10 @@ import { TouchableOpacity } from "react-native";
 import BottomSheet from "./BottomSheetQA";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import moment from "moment";
-import { Dimensions } from "react-native";
 import { Alert } from "react-native";
-import { formatDiagnostic } from "typescript";
 import { useIsFocused } from "@react-navigation/native";
+import AnimationWithDelete from './AnimationWithDelete'
+import { SwipeListView } from 'react-native-swipe-list-view';
 const QuestionsAnswers = ({navigation}) => {
   const [text, setText] = useState("");
   const [questions, setQuestions] = useState([]);
@@ -32,7 +33,7 @@ const QuestionsAnswers = ({navigation}) => {
     const token = await AsyncStorage.getItem("token");
     if (token !== null) {
       try {
-        const response = await fetch("http://192.168.0.105:8000/api/allQ", {
+        const response = await fetch("http://192.168.0.107:8000/api/allQ", {
           method: "GET",
         });
         const resData = await response.json();
@@ -47,6 +48,7 @@ const QuestionsAnswers = ({navigation}) => {
   useEffect(() => {
     if(isFocusedd){
       getQuestions();
+      getLoggedInUserDetails()
     }
     
   }, [isFocusedd]);
@@ -56,11 +58,11 @@ const QuestionsAnswers = ({navigation}) => {
     if (token !== null) {
       try {
         const response = await fetch(
-          "http://192.168.0.105:8000/api/answers/" + id,
+          "http://192.168.0.107:8000/api/answers/" + id,
           {
             method: "GET",
           }
-        );
+        )
         setQuestionIdToAnswer(id)
         const resData = await response.json();
         // console.log(resData.answers ? resData.answers : resData.msg)
@@ -97,7 +99,7 @@ const QuestionsAnswers = ({navigation}) => {
     if (token !== null) {
       try {
         const response = await fetch(
-          "http://192.168.0.105:8000/api/searchQuest",
+          "http://192.168.0.107:8000/api/searchQuest",
           {
             method: "POST",
             headers: {
@@ -121,7 +123,7 @@ const QuestionsAnswers = ({navigation}) => {
     if(token!==null){
       console.log('fi token')
       try{
-        const response = await fetch('http://192.168.0.105:8000/api/respondToQuestion/'+QuestionId,{
+        const response = await fetch('http://192.168.0.107:8000/api/respondToQuestion/'+QuestionId,{
           method:"POST",
           headers:{
             'Content-Type': 'application/json',
@@ -281,6 +283,182 @@ const QuestionsAnswers = ({navigation}) => {
   const handleTextChange = (text) => {
     setText(text);
   };
+  const [userId,setUserId] = useState({})
+  const getLoggedInUserDetails = async () =>{
+    const val = await AsyncStorage.getItem('token')
+    try{
+      const response = await fetch("http://192.168.0.107:8000/api/getLoggedInUserDetails",{
+        method:"GET",
+        headers:{
+          "Accept": 'application/json',
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${val}`,
+        },
+      })
+      const resData = await response.json()
+      
+      console.log(resData.user)
+      setUserId(resData.user.id)
+      console.log(userId)
+      // console.log(user)
+    }
+    catch(err){
+      console.log('error:',err)
+    }
+  }
+  const Basic = () => {
+    const customArray = [
+      {
+        id:1,
+        msg:"hi"
+      },
+      {
+        id:2,
+        msg:"how are you"
+      }
+    ];
+      const [listData, setListData] = useState(
+          answers.map((item, index) => ({ 
+              key: `${index}`,
+              id:item.id,
+              answer: item.answer,
+              uname:item.get_user.name,
+              picture:item.get_user.profilepicture,
+              answered:item.answered,
+              userId:item.get_user.id
+          }))
+      );
+  
+      const closeRow = (rowMap, rowKey) => {
+          if (rowMap[rowKey]) {
+              rowMap[rowKey].closeRow();
+          }
+      };
+  
+      const deleteRow = async (rowMap, rowKey ,answerId) => {
+          closeRow(rowMap, rowKey);
+          // const newData = [...listData];
+          // const prevIndex = listData.findIndex(item => item.key === rowKey);
+          // newData.splice(prevIndex, 1);
+          // setListData(newData);
+          const token = await AsyncStorage.getItem('token')
+          if(token !== null){
+              try{
+                  const response=await fetch(`http://192.168.0.107:8000/api/deleteAnswer/${answerId}`,{
+                      method:"GET",
+                  })
+                  const resData = await response.json()
+                  console.log(resData)
+                  setAnswers(resData.newAnswers)
+                  getQuestions()
+              }
+              catch(err){
+                  console.log(err)
+              }
+          }
+      };
+  
+      const onRowDidOpen = rowKey => {
+          console.log('This row opened', rowKey);
+      };
+  
+      // const renderItem = data => (
+      //     <TouchableHighlight
+      //         onPress={() => console.log('You touched me :'+data.item.text)}
+      //         style={styles.rowFront}
+      //         underlayColor={'#AAA'}
+      //     >
+      //         <View>
+      //             {/* <Text>{data.item.id}</Text> */}
+      //             <View style={{flexDirection:'row',gap:10}}>
+      //                 <View style={{ borderRadius: "100",width:60, overflow: "hidden" }}>
+      //                     <Image
+      //                     source={{uri: 'http://192.168.0.105:8000/'+data.item.picture}}
+      //                         //source={require("../images/profilepic.jpg")}
+      //                         style={{ width: 60, height: 20,backgroundColor:'#ccc' }}
+      //                         resizeMode='cover'
+      //                     />
+      //                 </View>
+      //                 <View style={{gap:10}}>
+      //                 <Text>{data.item.uname} {data.item.id}</Text>
+      //                 <Text>{data.item.answer} {data.item.answered ? <Ionicons name="checkbox" color={'#03ba55'} size={20}/> : null}</Text>
+      //                 </View>
+                      
+                      
+                      
+      //             </View>
+                  
+      //         </View>
+      //     </TouchableHighlight>
+      // );
+      
+      const renderHiddenItem = (data, rowMap) => {
+        if(data.item.userId === userId){
+          return (
+            <View style={styles.rowBack}>
+                {/* <Text>Left</Text> */}
+                <TouchableOpacity
+                    style={[styles.backRightBtn, styles.backRightBtnLeft]}
+                    onPress={() => closeRow(rowMap, data.item.key)}
+                >
+                    <Text style={styles.backTextWhite}>Close</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.backRightBtn, styles.backRightBtnRight]}
+                    onPress={() => deleteRow(rowMap, data.item.key,data.item.id)}
+                >
+                    <Text style={styles.backTextWhite}>Delete {data.item.id}</Text>
+                </TouchableOpacity>
+            </View>
+        )
+        }
+    };
+  
+      return (
+          <View style={styles.container}>
+              <SwipeListView
+                  data={listData}
+                  renderItem={({item})=>{
+                    return (
+                      <TouchableHighlight
+              onPress={() => console.log('You touched me :'+item.id)}
+              style={styles.rowFront}
+              underlayColor={'#AAA'}
+          >
+              <View>
+                  {/* <Text>{data.item.id}</Text> */}
+                  <View style={{flexDirection:'row',gap:10}}>
+                      <View style={{ borderRadius: "100",width:30,height:30, overflow: "hidden",marginLeft:10 }}>
+                          <Image
+                          source={{uri: 'http://192.168.0.105:8000/'+item.picture}}
+                              //source={require("../images/profilepic.jpg")}
+                              style={{ width: 30, height: 30,backgroundColor:'#ccc' }}
+                              resizeMode='cover'
+                          />
+                      </View>
+                      <View style={{gap:10}}>
+                      <Text>{item.uname} {item.userId} </Text>
+                      <Text>{item.answer} {item.answered ? <Ionicons name="checkbox" color={'#03ba55'} size={20}/> : null}</Text>
+                      </View>
+                  </View>
+                  
+              </View>
+          </TouchableHighlight>
+                    )
+                  }}
+                  renderHiddenItem={renderHiddenItem}
+                  // leftOpenValue={75}
+                  rightOpenValue={-150}
+                  previewRowKey={'0'}
+                  previewOpenValue={-40}
+                  previewOpenDelay={3000}
+                  onRowDidOpen={onRowDidOpen}
+                  // bounces={false}
+                  style={{backgroundColor:'#fff'}}
+              />
+          </View>
+      );
+  }
   const MapAnswers = () => {
     return (
       answers.map((a, idx) => {
@@ -290,7 +468,7 @@ const QuestionsAnswers = ({navigation}) => {
             <View style={{flexDirection:'row',gap:10}}>
             <View style={{ borderRadius: "100",width:50, overflow: "hidden" }}>
               <Image
-              source={{uri: 'http://192.168.0.105:8000/'+a.get_user.profilepicture}}
+              source={{uri: 'http://192.168.0.107:8000/'+a.get_user.profilepicture}}
                 //source={require("../images/profilepic.jpg")}
                 style={{ width: 50, height: 50,backgroundColor:'#ccc' }}
                 resizeMode='contain'
@@ -298,7 +476,7 @@ const QuestionsAnswers = ({navigation}) => {
             </View>
             <View style={{gap:5}}>
             <Text style={{fontWeight:"500"}}>{a.get_user.name}</Text>
-            <Text style={{fontSize:18}}>{a.answer} {a.answered ? <Ionicons name="checkbox" color={'#03ba55'} size={20}/> : null}</Text>
+            <Text style={{fontSize:18,width:280}}>{a.answer} {a.answered ? <Ionicons name="checkbox" color={'#03ba55'} size={20}/> : null}</Text>
             </View>
             
             </View>
@@ -310,6 +488,7 @@ const QuestionsAnswers = ({navigation}) => {
     )
     
   }
+  
   const AddQuestionToDb = async (q) => {
     console.log(q)
     const token = await AsyncStorage.getItem('token')
@@ -318,7 +497,7 @@ const QuestionsAnswers = ({navigation}) => {
         console.log('token not null')
         const formData = new FormData()
         formData.append('question',q)
-        const response = await fetch('http://192.168.0.105:8000/api/askQuestion',{
+        const response = await fetch('http://192.168.0.107:8000/api/askQuestion',{
           method:"POST",
           headers:{
             
@@ -368,27 +547,7 @@ const QuestionsAnswers = ({navigation}) => {
   const handleBlur = () => {
     setIsFocused(false);
   };
-  // const [keyboardHeight, setKeyboardHeight] = useState(0);
-  // useEffect(() => {
-  //   const keyboardDidShowListener = Keyboard.addListener(
-  //     'keyboardDidShow',
-  //     (event) => {
-  //       setKeyboardHeight(event.endCoordinates.height);
-  //     }
-  //   );
-
-  //   const keyboardDidHideListener = Keyboard.addListener(
-  //     'keyboardDidHide',
-  //     () => {
-  //       setKeyboardHeight(0);
-  //     }
-  //   );
-
-  //   return () => {
-  //     keyboardDidShowListener.remove();
-  //     keyboardDidHideListener.remove();
-  //   };
-  // }, []);
+  
   const [answerfield,setAnswerField] = useState('')
   return (
     <Provider>
@@ -481,9 +640,13 @@ const QuestionsAnswers = ({navigation}) => {
               behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
               style={{ flex: 1 }}
             >
-              <ScrollView contentContainerStyle={{ padding: 20 }}>
-                <MapAnswers />
-              </ScrollView>
+              {/* <ScrollView contentContainerStyle={{ backgroundColor:'#fff' }}> */}
+                {/* <MapAnswers /> */}
+                {/* <AnimationWithDelete answers={answers} /> */}
+                {/* <MapAnswers2 /> */}
+                <View style={{height:1,backgroundColor:'#ccc'}} />
+                <Basic />
+              {/* </ScrollView> */}
               
             </KeyboardAvoidingView>
             ) : (
@@ -590,4 +753,39 @@ const styles = StyleSheet.create({
   focusedTextInput: {
     marginBottom: 167,
   },
+  backTextWhite: {
+    color: '#FFF',
+},
+rowFront: {
+    // alignItems: 'center',
+    backgroundColor: '#fff',
+    borderBottomColor: '#fff',
+    borderBottomWidth: 1,
+    justifyContent: 'center',
+    height: 70,
+},
+rowBack: {
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingLeft: 15,
+},
+backRightBtn: {
+    alignItems: 'center',
+    bottom: 0,
+    justifyContent: 'center',
+    position: 'absolute',
+    top: 0,
+    width: 75,
+},
+backRightBtnLeft: {
+    backgroundColor: 'blue',
+    right: 75,
+},
+backRightBtnRight: {
+    backgroundColor: 'red',
+    right: 0,
+},
 });

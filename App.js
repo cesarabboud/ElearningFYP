@@ -25,7 +25,7 @@ import {
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
+import { MaterialCommunityIcons, Feather, Ionicons } from "@expo/vector-icons";
 import TestScreen from "./screens/testScreen";
 import StudentProfile from "./screens/StudentProfile";
 import ReviewPage from "./screens/ReviewPage";
@@ -70,15 +70,19 @@ function MyTabsAdmin() {
         tabBarStyle: {
           backgroundColor: "#13131A",
         },
-        tabBarLabelStyle: {
-          display: "none",
-        },
+        // tabBarLabelStyle: {
+        //   display: "none",
+        // },
       }}
     >
       <Tab.Screen
         name="StudentsList"
         component={StudentsList}
         options={({ route }) => ({
+          tabBarLabel:"Students",
+          tabBarLabelStyle:{
+            
+          },
           tabBarIcon: ({ color, size }) => {
             const focusedRoute = getFocusedRouteNameFromRoute(route);
             const isCurrentScreen = focusedRoute === "StudentsList";
@@ -97,6 +101,7 @@ function MyTabsAdmin() {
         name="TeachersList"
         component={TeachersList}
         options={({ route }) => ({
+          tabBarLabel:"Teachers",
           tabBarIcon: ({ color, size }) => {
             const focusedRoute = getFocusedRouteNameFromRoute(route);
             const isCurrentScreen = focusedRoute === "TeachersList";
@@ -115,13 +120,14 @@ function MyTabsAdmin() {
         name="AdminProfile"
         component={AdminProfile}
         options={({ route }) => ({
+          tabBarLabel:"Stats",
           tabBarIcon: ({ color, size }) => {
             const focusedRoute = getFocusedRouteNameFromRoute(route);
             const isCurrentScreen = focusedRoute === "AdminProfile";
 
             return (
-              <MaterialCommunityIcons
-                name="account-circle"
+              <Ionicons
+                name="stats-chart"
                 color={isCurrentScreen ? "#03ba55" : color}
                 size={30}
               />

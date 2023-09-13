@@ -31,7 +31,7 @@ const EditProfile = () => {
   const getLoggedInUserDetails = async () =>{
     const token = await AsyncStorage.getItem('token')
     try{
-      const response = await fetch("http://192.168.0.105:8000/api/getLoggedInUserDetails",{
+      const response = await fetch("http://192.168.0.107:8000/api/getLoggedInUserDetails",{
         method:"GET",
         headers:{
           "Accept": 'application/json',
@@ -76,7 +76,7 @@ const EditProfile = () => {
           alert("Please fill all the fields")
         }
         console.log(formData)
-        const response = await fetch('http://192.168.0.105:8000/api/editProfile',{
+        const response = await fetch('http://192.168.0.107:8000/api/editProfile',{
           method:"POST",
           headers:{
             "Authorization":`Bearer ${token}`
@@ -115,7 +115,7 @@ const EditProfile = () => {
         >
           
           <Image
-            source={{uri: image === '' ? 'http://192.168.0.105:8000/'+user.profilepicture : image }}
+            source={{uri: image === '' ? 'http://192.168.0.107:8000/'+user.profilepicture : image }}
             style={{ width: 100, height: 100 }}
           />
         </View>
