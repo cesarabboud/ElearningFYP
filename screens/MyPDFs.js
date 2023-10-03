@@ -355,7 +355,7 @@ const MyPDFs = () => {
             }
         })
         const resData =await response.json()
-        console.log('length',resData.courses.pdf.length)
+        // console.log('length',resData.courses.pdf.length)
         setPdfArr(!resData.courses.pdf ? [] : resData.courses.pdf)
         setPptxArr(!resData.courses.pptx ? [] : resData.courses.pptx)
         setDocxArr(!resData.courses.docx ? [] : resData.courses.docx)
@@ -478,11 +478,11 @@ const FirstRoute = () => {
                     return (
             <View key={idx}>
                 <TouchableOpacity
-                onPress={()=>navigation.navigate(docx.get_course.type === 'mp4' ? "CourseDetails": "BookDetails",{
-                  cid:docx.get_course.id,
-                  cat:docx.get_course.get_category.name,
-                  uploader:docx.get_course.get_user.name,
-                  cType:docx.get_course.type
+                onPress={()=>navigation.navigate("MyWebComponent",{
+                  pdfId:docx.get_course.id,
+                  pdfurl:'http://192.168.0.107:8000/'+docx.get_course.link,
+                  pdftitle:docx.get_course.title,
+                  pdftype:docx.get_course.type
                 })}
                 style={{flexDirection:"row",alignItems:'center',justifyContent:'space-between',padding:25}}>
                     <View style={{flexDirection:'row',alignItems:'center',gap:10,}}>

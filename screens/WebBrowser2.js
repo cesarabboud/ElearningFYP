@@ -120,7 +120,7 @@ const MyWebComponent = ({route}) => {
       <View style={{flexDirection:'row',margin:10,justifyContent:'space-between',alignItems:'center'}}>
         <Ionicons onPress={()=>navigation.goBack()} name='chevron-back' size={24} />
         <Text style={{fontWeight:"600",fontSize:20}}>{pdftitle}.{pdftype}</Text>
-        <Ionicons onPress={pdfurl.split(".").pop() === 'pptx' ? handleShare : handleDownloadPPT} name="share-social-outline" size={24}/>
+        <Ionicons onPress={(pdfurl.split(".").pop() === 'pptx' || pdfurl.split(".").pop() === 'docx')  ? handleShare : handleDownloadPPT} name="share-social-outline" size={24}/>
 
 
       </View>
