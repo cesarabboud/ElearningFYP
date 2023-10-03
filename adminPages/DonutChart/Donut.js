@@ -82,7 +82,7 @@ export default function Donut({
         <G
           rotation="-90"
           origin={`${halfCircle}, ${halfCircle}`}>
-          <Circle
+          <AnimatedCircle
             ref={circleRef}
             cx="50%"
             cy="50%"

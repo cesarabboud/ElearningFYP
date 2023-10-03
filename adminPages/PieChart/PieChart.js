@@ -50,6 +50,9 @@ const ChartExample = () => {
       //   d.population = resData[idx]
       // })
       data2.forEach((d,idx) => {
+        if(idx === 0){
+          d.population = resData[idx] + 1
+        }
         d.population = resData[idx]
       })
     }

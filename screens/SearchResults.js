@@ -3,7 +3,7 @@ import Animated, { FadeInRight, FadeInLeft } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { Button, IconButton } from "react-native-paper";
 import React,{useState,useEffect} from "react";
-import { useNavigation,StackActions } from "@react-navigation/native";
+import { useNavigation,StackActions, useIsFocused } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableWithoutFeedback } from "react-native";
@@ -39,6 +39,31 @@ const App = ({route}) => {
           if(resData.nbcourses){
             console.log(resData.nbcourses)
             setSearchRes(resData.courses)
+            try{
+              const myFav = await AsyncStorage.getItem('userfav')
+              const loaded = JSON.parse(myFav)
+              console.log('loaded',loaded)
+              if(loaded.length !==0){
+                console.log('hi loaded')
+                const UpdatedSearchRes = resData.courses.map(item => ({
+                  ...item,
+                  isFav: loaded.some(loadedItem => loadedItem.pivot.course_id === item.id) ? true : false
+                }));
+                setSearchRes(UpdatedSearchRes)
+                console.log('res',searchRes)
+              }
+              else{
+                const UpdatedSearchRes = resData.courses.map(item => ({
+                  ...item,
+                  isFav: false,
+                }));
+                setSearchRes(UpdatedSearchRes)
+                console.log('res',searchRes)
+              }
+            }
+            catch(err){
+              console.log(err)
+            }
           }
         }
         catch(err){
@@ -72,9 +97,65 @@ const App = ({route}) => {
           }
       }
     }
+  const AddToFavorites = async (id) => {
+    // alert('hiiii')
+    const token = await AsyncStorage.getItem('token')
+    if(token !== null){
+      try{
+        const response = await fetch('http://192.168.0.107:8000/api/addToFav/'+id,{
+          method:"POST",
+          headers:{
+            "Authorization":`Bearer ${token}`
+          }
+        })
+        const resData = await response.json()
+        console.log('ho')
+        console.log(resData)
+        console.log(resData.userFav)
+        if (resData.userFav !== undefined && resData.userFav !== null) {
+          await AsyncStorage.setItem('userfav', JSON.stringify(resData.userFav));
+          console.log('Data saved successfully');
+          SearchByName();
+        } else {
+          console.warn('Data is undefined or null; not saving to AsyncStorage.');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  }
+
+  const RemoveFromFav = async (id) => {
+    // alert('hi')
+    const token = await AsyncStorage.getItem('token')
+    if(token !== null){
+      try{
+        const response = await fetch('http://192.168.0.107:8000/api/deleteFromFav/'+id,{
+          method:"POST",
+          headers:{
+            "Authorization":`Bearer ${token}`
+          }
+        })
+        const resData = await response.json()
+        if (resData.userFav !== undefined && resData.userFav !== null) {
+          await AsyncStorage.setItem('userfav', JSON.stringify(resData.userFav));
+          console.log('Data saved successfully');
+          SearchByName();
+        } else {
+          console.warn('Data is undefined or null; not saving to AsyncStorage.');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  }
+  const isFocused = useIsFocused()
   useEffect(()=>{
-    SearchByName()
-  },[])
+    if(isFocused){
+      SearchByName()
+    }
+    
+  },[isFocused])
   const checkMsg = () => {
     if(msg === 'item already in cart!' || msg ==='bought'){
       return msg
@@ -127,11 +208,17 @@ const App = ({route}) => {
           }}
           entering={FadeInRight.delay((idx+1) * 500)}
         >
-          <IconButton icon={"heart-outline"} iconColor="#03ba55"/>
+          {
+            prod.isFav === false ? <IconButton onPress={()=>AddToFavorites(prod.id)} icon={"heart-outline"} iconColor={"#03ba55"}/>
+            : <IconButton onPress={()=>RemoveFromFav(prod.id)} icon={"heart"} iconColor={"red"}/>
+          }
+          
           <View style={{alignSelf:'center'}}>
-            <TouchableWithoutFeedback onPress={()=>navigation.navigate("CourseDetails",{
+            <TouchableWithoutFeedback onPress={()=>navigation.navigate(prod.type === 'mp4' ? "CourseDetails" : "BookDetails",{
               cid:prod.id,
-              cat:prod.get_category.name
+              cat:prod.get_category.name,
+              uploader:prod.get_user.name,
+              cType:prod.type
             })}>
             <Image
             source={{uri:'http://192.168.0.107:8000/'+prod.thumbnail}}
@@ -158,7 +245,7 @@ const App = ({route}) => {
             >
               {/* <IconButton icon={"star"} iconColor="#ffc107" style={{ margin:0 }} /> */}
               <Ionicons name='star' color={'#ffc107'} size={20}/>
-              <Text style={{fontSize: 12, fontWeight: '600',color:"#fff"}}>{prod.rating}</Text>
+              <Text style={{fontSize: 12, fontWeight: '600',color:"#fff"}}>{prod.rating}.0</Text>
             </View>
             <Text style={{fontSize: 16, fontWeight: '600',color:"#fff"}}>${prod.price}</Text>
 

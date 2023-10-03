@@ -8,53 +8,50 @@ import {
   Dimensions,
   FlatList,
 } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer,useRoute} from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { IconButton, List } from "react-native-paper";
-const red = 29 / 3,
-  green = (176 + 186 + 183) / 3,
-  blue = (114 + 93 + 65) / 3;
 const screenwidth = Dimensions.get("window").width;
-const reviews = [
-  {
-    id: 1,
-    name: "Cesar Abboud",
-    rating: 5,
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod temporincididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet," +
-      "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et " +
-      "dolore magna aliq.",
-  },
-  {
-    id: 2,
-    name: "Cesar Abboud",
-    rating: 5,
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod temporincididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet," +
-      "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et " +
-      "dolore magna aliq.",
-  },
-  {
-    id: 3,
-    name: "Cesar Abboud",
-    rating: 5,
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod temporincididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet," +
-      "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et " +
-      "dolore magna aliq.",
-  },
-  {
-    id: 4,
-    name: "Cesar Abboud",
-    rating: 5,
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod temporincididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet," +
-      "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et " +
-      "dolore magna aliq.",
-  },
-];
+// const reviews = [
+//   {
+//     id: 1,
+//     name: "Cesar Abboud",
+//     rating: 5,
+//     description:
+//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod temporincididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet," +
+//       "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et " +
+//       "dolore magna aliq.",
+//   },
+//   {
+//     id: 2,
+//     name: "Cesar Abboud",
+//     rating: 5,
+//     description:
+//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod temporincididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet," +
+//       "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et " +
+//       "dolore magna aliq.",
+//   },
+//   {
+//     id: 3,
+//     name: "Cesar Abboud",
+//     rating: 5,
+//     description:
+//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod temporincididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet," +
+//       "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et " +
+//       "dolore magna aliq.",
+//   },
+//   {
+//     id: 4,
+//     name: "Cesar Abboud",
+//     rating: 5,
+//     description:
+//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod temporincididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet," +
+//       "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et " +
+//       "dolore magna aliq.",
+//   },
+// ];
 
-const ListReview = ({ item }) => {
+const ListReview = ({ item}) => {
   return (
     <View style={{ gap: 10, marginTop: 10, marginHorizontal: 10 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
@@ -63,76 +60,77 @@ const ListReview = ({ item }) => {
             borderRadius: "100",
             overflow: "hidden",
             width: 60,
+            backgroundColor:'#ccc'
           }}
         >
           <Image
-            source={require("../images/profilepic.jpg")}
-            style={{ width: 60, height: 60 }}
+            source={{uri:'http://192.168.0.107:8000/'+item.get_user.profilepicture}}
+            resizeMode="cover"
+            style={{ width:60,height:60 }}
           />
         </View>
         <View style={{ gap: 3 }}>
-          <Text>{item.name}</Text>
+          <Text>{item.get_user.name}</Text>
 
           <View
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
+              alignItems:'center',
               width: screenwidth - 85,
             }}
           >
             <View style={{ flexDirection: "row", gap: 5 }}>
               <IconButton
                 icon="star"
-                iconColor="#ffc107"
+                iconColor={item.rating >=1 ? "#ffc107" : "#ccc"}
                 size={18}
                 style={{ marginHorizontal: -10, marginVertical: -8 }}
               />
               <IconButton
                 icon="star"
-                iconColor="#ffc107"
+                iconColor={item.rating >=2 ? "#ffc107" : "#ccc"}
                 size={18}
                 style={{ marginHorizontal: -10, marginVertical: -8 }}
               />
               <IconButton
                 icon="star"
-                iconColor="#ffc107"
+                iconColor={item.rating >=3 ? "#ffc107" : "#ccc"}
                 size={18}
                 style={{ marginHorizontal: -10, marginVertical: -8 }}
               />
               <IconButton
                 icon="star"
-                iconColor="#ffc107"
+                iconColor={item.rating >=4 ? "#ffc107" : "#ccc"}
                 size={18}
                 style={{ marginHorizontal: -10, marginVertical: -8 }}
               />
               <IconButton
                 icon="star"
-                iconColor="#ffc107"
+                iconColor={item.rating >=5 ? "#ffc107" : "#ccc"}
                 size={18}
                 style={{ marginHorizontal: -10, marginVertical: -8 }}
               />
             </View>
 
-            <Text>1 Day Ago</Text>
+            <Text style={{fontSize:13}}>{item.get_course.title}</Text>
           </View>
         </View>
       </View>
       <Text style={{ color: "#959595", textAlign: "left" }}>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-        tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor
-        sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
-        ut labore et dolore magna aliq.
+        {item.content}
       </Text>
     </View>
   );
 };
-function Reviews({ navigation }) {
+function Reviews({route}) {
+  const {pp,reviews} = route.params
   return (
     <>
       {/* Reviews listing */}
       <FlatList
         data={reviews}
-        renderItem={ListReview}
+        renderItem={({item})=><ListReview item={item} pp={pp}/>}
         keyExtractor={(item) => item.id}
       />
       {/* <Text style={{textAlign:'center',backgroundColor:'red'}}>{reviews.length}</Text> */}
@@ -140,31 +138,22 @@ function Reviews({ navigation }) {
   );
 }
 
-function CustomHeader({ scene, navigation }) {
-  return (
-    <View style={styles.headerContainer}>
-      <Image
-        source={require("../images/reviewsbckgrnd2.png")}
-        style={styles.headerBackground}
-        resizeMode="cover"
-      />
-      {/* <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Text style={styles.backButtonText}>Back</Text>
-      </TouchableOpacity> */}
-      <Text style={styles.headerText}>Reviews</Text>
-    </View>
-  );
-}
 
 const Stack = createNativeStackNavigator();
 
 const StudentReviews = () => {
+  const route = useRoute()
+  
   return (
     <Stack.Navigator>
       <Stack.Screen
         name="Reviews"
         component={Reviews}
         options={{headerShown:false}}
+        initialParams={{
+          pp:route.params.pp,
+          reviews:route.params.reviews
+        }}
       />
     </Stack.Navigator>
 

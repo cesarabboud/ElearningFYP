@@ -15,13 +15,14 @@ import React, { useState,useEffect } from "react";
 import { IconButton, DataTable, Provider ,Button} from "react-native-paper";
 import Modal from "react-native-modal";
 import Constants from "expo-constants";
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused,useNavigation } from "@react-navigation/native";
 import { ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Sharing from "expo-sharing";
 import { Buffer as NodeBuffer } from "buffer";
 import * as FileSystem from "expo-file-system";
 import ExcelJS from "exceljs";
+import { Ionicons } from "@expo/vector-icons";
 const TeachersList = () => {
   const [searchText, setSearchText] = useState("");
   const [showCancelButton, setShowCancelButton] = useState(false);
@@ -233,7 +234,7 @@ const TeachersList = () => {
           <DataTable.Row key={item.id}>
             <DataTable.Cell>{item.id}</DataTable.Cell>
             <DataTable.Cell>
-              <View style={{ borderRadius: "100", overflow: "hidden" }}>
+              <View style={{ borderRadius: "100", overflow: "hidden",backgroundColor:"#ccc" }}>
                 <Image
                   source={{uri:'http://192.168.0.107:8000/'+item.profilepicture}}
                   style={{ width: 35, height: 35 }}
@@ -265,6 +266,84 @@ const TeachersList = () => {
           </>
     );
   };
+  const MyTableSearchRes = (props) => {
+    const name = props.name
+    const [page, setPage] = React.useState(0);
+    const [numberOfItemsPerPageList] = React.useState([1,2,5]);
+    const [itemsPerPage, onItemsPerPageChange] = React.useState(
+      numberOfItemsPerPageList[1]
+    );
+
+    const from = page * itemsPerPage;
+    const to = Math.min((page + 1) * itemsPerPage, teachersList.length);
+    const filteredMentors = teachersList.filter((c) => c.name.toLowerCase().includes(name.toLowerCase()));
+    React.useEffect(() => {
+      setPage(0);
+    }, [itemsPerPage]);
+    const navigation = useNavigation()
+    if(filteredMentors.length !== 0){
+      return (
+        <>
+        <Text style={{margin:15,fontSize:22,fontWeight:"600"}}>{filteredMentors.length} Result{filteredMentors.length !== 1 ? `s` : null} Found.</Text>
+        <DataTable>
+          <DataTable.Header>
+            <DataTable.Title textStyle={{}}>#</DataTable.Title>
+            <DataTable.Title><Text>Image</Text></DataTable.Title>
+            <DataTable.Title>Username</DataTable.Title>
+            <DataTable.Title>Email</DataTable.Title>
+            <DataTable.Title></DataTable.Title>
+          </DataTable.Header>
+  
+          {filteredMentors.slice(from, to).map((item) => (
+            <DataTable.Row  key={item.id}>
+              <DataTable.Cell 
+              onPress={()=>navigation.navigate("StudentDetails",{
+                studId:item.id,
+                fullName:item.name,
+                email:item.email,
+                pp:item.pp
+              })}
+              >{item.id}</DataTable.Cell>
+              <DataTable.Cell>
+                <View style={{ borderRadius: "100", overflow: "hidden",justifyContent:'center',alignItems:'center',backgroundColor:"#ccc" }}>
+                  <Image
+                    source={{uri:'http://192.168.0.107:8000/'+item.profilepicture}}
+                    resizeMode='stretch'
+                    style={{ width: 35, height: 35 ,}}
+                  />
+                </View>
+              </DataTable.Cell>
+              <DataTable.Cell>{item.name}</DataTable.Cell>
+              <DataTable.Cell>{item.email}</DataTable.Cell>
+              <DataTable.Cell style={{alignItems:'center',justifyContent:'center'}}>
+                <IconButton onPress={()=>DeleteStudent(item.id)} style={{margin:-3}} icon={"close"} iconColor="red" />
+              </DataTable.Cell>
+            </DataTable.Row>
+          ))}
+          
+          <DataTable.Pagination
+            
+            page={page}
+            numberOfPages={Math.ceil(filteredMentors.length / itemsPerPage)}
+            onPageChange={(page) => setPage(page)}
+            label={`${from + 1}-${to} of ${filteredMentors.length}`}
+            numberOfItemsPerPageList={numberOfItemsPerPageList}
+            numberOfItemsPerPage={itemsPerPage}
+            onItemsPerPageChange={onItemsPerPageChange}
+            showFastPaginationControls
+            
+            selectPageDropdownLabel={"Rows per page"}
+          />
+        </DataTable>
+        </>
+      );
+    }
+    return (
+      <View style={{flex:1,justifyContent:'center',alignItems:'center'}}>
+        <Text style={{fontWeight:"600",fontSize:24}}>No results found.</Text>
+      </View>
+    )
+  };
   const NoTutors = () =>{
     return(<ActivityIndicator style={styles.activityIndicatorStyle} />)
     
@@ -277,8 +356,6 @@ const TeachersList = () => {
             backgroundColor: "#03ba55",
             borderBottomLeftRadius: 20,
             borderBottomRightRadius: 20,
-            gap:10,
-            padding:10
           }}
         >
           <Text
@@ -310,11 +387,9 @@ const TeachersList = () => {
                 width: "75%",
               }}
             >
-              <IconButton
-                icon="magnify"
-                iconColor="#000"
-                size={28}
-                style={{ margin: 0 }}
+              <Ionicons
+                name="search"
+                size={20}
               />
               <TextInput
                 style={{ padding: 10, fontSize: 20, width: "80%" }}
@@ -329,16 +404,7 @@ const TeachersList = () => {
                 <TouchableOpacity onPress={handleCancelPress}>
                   <Text style={{ color: "#008BD9", fontSize: 20 }}>Cancel</Text>
                 </TouchableOpacity>
-              ) : (
-                <TouchableOpacity onPress={handleFilterPress}>
-                  <IconButton
-                    icon="filter-variant"
-                    iconColor="#000"
-                    size={28}
-                    style={{ margin: 0 }}
-                  />
-                </TouchableOpacity>
-              )}
+              ) : null}
             </View>
             <Modal
               isVisible={showSortModal}
@@ -369,7 +435,11 @@ const TeachersList = () => {
         
 
         
-        {teachersList.length > 0 ? <MyTable /> : <NoTutors />}
+        {teachersList.length > 0 ? (
+        searchText === '' ? <MyTable /> : <MyTableSearchRes name={searchText} />
+      ) : (
+        <NoTutors />
+      )}
       </View>
     </Provider>
   );

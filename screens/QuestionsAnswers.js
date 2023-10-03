@@ -239,7 +239,12 @@ const QuestionsAnswers = ({navigation}) => {
             <Text>Posted By: {q.get_user.name}</Text>
             <Text>{calculateTimeDifference(q.created_at)}</Text>
           </View>
+          <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',gap: 15}}>
           <Text style={styles.question}>{q.question}</Text>
+          {text.toLowerCase() === q.question ? <Text style={{backgroundColor:'#ccc',padding:5}}>Exact Match</Text> : null}
+
+          </View>
+          
           <View
             style={{
               flexDirection: "row",
@@ -263,7 +268,11 @@ const QuestionsAnswers = ({navigation}) => {
                 }}
               />
 
-              <Text style={styles.chatText}>{q.answers_count} Answers</Text>
+              <Text style={styles.chatText}>
+                {q.answers_count > 0 ?
+                <Text>{q.answers_count} </Text> : <Text>No </Text>}
+                {q.answers_count === 1 ? <Text>Answer</Text> : <Text>Answers</Text>} 
+              </Text>
             </TouchableOpacity>
             {q.correctlyAnswered === true ? (
               <Ionicons
@@ -284,6 +293,8 @@ const QuestionsAnswers = ({navigation}) => {
     setText(text);
   };
   const [userId,setUserId] = useState({})
+  const [user,setUser] = useState({})
+  const [role,setRole] = useState("")
   const getLoggedInUserDetails = async () =>{
     const val = await AsyncStorage.getItem('token')
     try{
@@ -298,12 +309,48 @@ const QuestionsAnswers = ({navigation}) => {
       const resData = await response.json()
       
       console.log(resData.user)
+      setUser(resData.user)
+      // console.log(user)
       setUserId(resData.user.id)
-      console.log(userId)
+      console.log(resData.user.get_role.name)
+      setRole(resData.user.get_role.name)
+      // console.log('role',role)
+      // console.log(userId)
       // console.log(user)
     }
     catch(err){
       console.log('error:',err)
+    }
+  }
+  // useEffect(()=>{
+  //   console.log('role',role)
+  // },[role])
+  const ApproveAnswer = async (answerId) => {
+    try{
+      const response = await fetch('http://192.168.0.107:8000/api/approveAnswer/'+answerId,{
+        method:"GET"
+      })
+      const resData = await response.json()
+      getAnswers(questionIdToAnswer)
+      getQuestions()
+      console.log(resData)
+    }
+    catch(err){
+      console.log(err)
+    }
+  }
+  const DisapproveAnswer = async (answerId) => {
+    try{
+      const response = await fetch('http://192.168.0.107:8000/api/disapproveAnswer/'+answerId,{
+        method:"GET"
+      })
+      const resData = await response.json()
+      getAnswers(questionIdToAnswer)
+      getQuestions()
+      console.log(resData)
+    }
+    catch(err){
+      console.log(err)
     }
   }
   const Basic = () => {
@@ -325,7 +372,7 @@ const QuestionsAnswers = ({navigation}) => {
               uname:item.get_user.name,
               picture:item.get_user.profilepicture,
               answered:item.answered,
-              userId:item.get_user.id
+              userId:item.get_user.id,
           }))
       );
   
@@ -427,18 +474,50 @@ const QuestionsAnswers = ({navigation}) => {
           >
               <View>
                   {/* <Text>{data.item.id}</Text> */}
-                  <View style={{flexDirection:'row',gap:10}}>
+                  <View style={{flexDirection:'row',gap:10,alignItems:'center'}}>
                       <View style={{ borderRadius: "100",width:30,height:30, overflow: "hidden",marginLeft:10 }}>
                           <Image
-                          source={{uri: 'http://192.168.0.105:8000/'+item.picture}}
+                          source={{uri: 'http://192.168.0.107:8000/'+item.picture}}
                               //source={require("../images/profilepic.jpg")}
                               style={{ width: 30, height: 30,backgroundColor:'#ccc' }}
                               resizeMode='cover'
                           />
                       </View>
+                      <View style={{flexDirection:'row',gap:30}}>
+
                       <View style={{gap:10}}>
                       <Text>{item.uname} {item.userId} </Text>
-                      <Text>{item.answer} {item.answered ? <Ionicons name="checkbox" color={'#03ba55'} size={20}/> : null}</Text>
+                      <View style={{flexDirection:'row',alignItems:'center'}}>
+                      <Text style={{width:200,fontSize:12}}>{item.answer} </Text>
+                      {item.answered ? <Ionicons name="checkbox" color={'#03ba55'} size={16}/> : null}
+                      </View>
+                      
+                      </View>
+                      {
+                        (!item.answered && item.userId !== userId && role==='Instructor') ? <TouchableOpacity onPress={()=>ApproveAnswer(item.id)}>
+                        <Button
+                          mode="contained"
+                          buttonColor="#ccc"
+                          style={{ borderRadius: 8 }}
+                          textColor="#000"
+                        >
+                          Approve
+                        </Button>
+                      </TouchableOpacity> : null
+                      }
+                      {
+                        (item.answered && role==='Instructor' ) ? <TouchableOpacity onPress={()=>DisapproveAnswer(item.id)}>
+                        <Button
+                          mode="contained"
+                          buttonColor="#ccc"
+                          style={{ borderRadius: 8 }}
+                          textColor="#000"
+                        >
+                          Disapprove
+                        </Button>
+                      </TouchableOpacity> : null
+                      }
+                    
                       </View>
                   </View>
                   
@@ -560,7 +639,8 @@ const QuestionsAnswers = ({navigation}) => {
             }}
           />
           <StatusBar style="light" />
-          <View style={styles.upperContainer}>
+          
+<View style={styles.upperContainer}>
             <View style={styles.searchContainer}>
               <TextInput
                 placeholder="Search"
@@ -594,6 +674,7 @@ const QuestionsAnswers = ({navigation}) => {
                 </TouchableOpacity>
               ) : null}
             </View>
+            
             <TouchableOpacity onPress={AskQuestion}>
               <Button
                 mode="elevated"

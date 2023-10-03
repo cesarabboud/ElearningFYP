@@ -132,6 +132,11 @@ const ShoppingCart = () => {
       total:total
     })
   }
+  // const goToCheckout2 = () =>{
+  //   navigation.navigate("TestingPage",{
+  //     total:125,
+  //   })
+  // }
   useEffect(() => {
     if(isFocused){
       getCartContent();
@@ -250,6 +255,7 @@ const ShoppingCart = () => {
             alignItems: "center",
             height: 55,
           }}
+          onPress={()=>navigation.navigate("Wishlist")}
         >
           <Text style={{ fontWeight: "500", color: "#02ba5d" }}>
             Check Wishlist
@@ -272,22 +278,25 @@ const ShoppingCart = () => {
         </TouchableOpacity>
 
         <StatusBar style="dark" />
-        <Snackbar
-        visible={visible}
-        onDismiss={onDismissSnackBar}
-        duration={7000}
-        action={{
-          label: 'Undo',
-          labelStyle:{
-            color:'#03ba55'
-          },
-          onPress: () => {
-            // Do something
-            addItemToCart(lastId)
-          },
-        }}>
-        Item Deleted From Cart !
-      </Snackbar>
+        {
+           <Snackbar
+          visible={visible}
+          onDismiss={onDismissSnackBar}
+          duration={7000}
+          action={{
+            label: 'Undo',
+            labelStyle:{
+              color:'#03ba55'
+            },
+            onPress: () => {
+              // Do something
+              addItemToCart(lastId)
+            },
+          }}>
+          Item Deleted From Cart !
+        </Snackbar>
+        }
+        
       </SafeAreaView>
     );
   }
@@ -359,7 +368,7 @@ const ShoppingCart = () => {
                     borderRadius: 20,
                     marginTop:20,
                     gap:20,
-                    paddingVertical:25
+                    paddingVertical:25,
                   }}
                 >
                   <View style={{flexDirection:'row',justifyContent:'space-between',paddingHorizontal:15}}>
@@ -370,24 +379,31 @@ const ShoppingCart = () => {
                     <Text style={styles.textOperationsStyle}>Subtotal</Text>
                     <Text style={styles.textOperationsStyle}>${total}.00</Text>
                   </View>
-                  <View style={{flexDirection:'row',justifyContent:'space-between',paddingHorizontal:15}}>
+                  {/* <View style={{flexDirection:'row',justifyContent:'space-between',paddingHorizontal:15}}>
                     <Text style={styles.textOperationsStyle}>Fees</Text>
                     <Text style={styles.textOperationsStyle}>$3.00</Text>
-                  </View>
+                  </View> */}
                   <View style={{height:3,backgroundColor:"#fff"}} />
                   <View style={{flexDirection:'row',justifyContent:'space-between',paddingHorizontal:15}}>
                     <Text style={styles.textOperationsStyle}>Total</Text>
-                    <Text style={styles.textOperationsStyle}>${total + 3 }.00</Text>
+                    <Text style={styles.textOperationsStyle}>${total}.00</Text>
                   </View>
                 </LinearGradient>
         </View>
-        <TouchableOpacity onPress={goToCheckout} style={styles.checkoutbtn}>
+        <TouchableOpacity 
+        onPress={()=>navigation.navigate("TestingPage",{
+          cartitems:cartitems,
+          total:total
+        })} 
+        style={styles.checkoutbtn}>
             <Text style={styles.checkouttext}>Checkout</Text>
         </TouchableOpacity>
-        
+        {/* <TouchableOpacity onPress={goToCheckout2} style={styles.checkoutbtn}>
+            <Text style={styles.checkouttext}>Checkout 2</Text>
+        </TouchableOpacity> */}
         </ScrollView>
-        {
-          cartitems.length > 1 ? <Snackbar
+        { cartitems.length > 0 ?
+           <Snackbar
           visible={visible}
           onDismiss={onDismissSnackBar}
           duration={7000}

@@ -7,8 +7,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from 'expo-image-picker'
 import { TouchableWithoutFeedback } from "react-native";
 import { Keyboard } from "react-native";
-import { formatDiagnosticsWithColorAndContext } from "typescript";
-const EditProfile = () => {
+const EditProfile = ({route}) => {
+  const rolee = route.params.rolee
+  console.log(rolee)
   const [image, setImage] = useState("");
   const [username,setUsername] = useState('')
   const [email,setEmail] = useState('')
@@ -61,7 +62,7 @@ const EditProfile = () => {
     if(token !== null){
       try{
         const formData = new FormData()
-        if(image !== null && username!=='' && email!==''){
+        if(image !== null && username!==''){
           
           formData.append("image", {
             uri: image,
@@ -69,11 +70,11 @@ const EditProfile = () => {
             name: "myImage.jpg",
           });
           formData.append('uname',username)
-          formData.append('uemail',email)
+          // formData.append('uemail',email)
           
         }
-        else if (username === '' || email === ''){
-          alert("Please fill all the fields")
+        else if (username === ''){
+          alert("usename is empty !")
         }
         console.log(formData)
         const response = await fetch('http://192.168.0.107:8000/api/editProfile',{
@@ -85,7 +86,10 @@ const EditProfile = () => {
         })
         const resData = await response.json()
         alert(resData.msg)
-        navigation.replace("InstructorProfile")
+        // navigation.replace(rolee === 'Student' ? "Studentprofile" : "InstructorProfile")
+        navigation.goBack()
+
+        // navigation.dispatch(StackActions.pop(1))
       }
       catch(e){
         console.log(e)
@@ -111,6 +115,7 @@ const EditProfile = () => {
             borderRadius: "100",
             overflow: "hidden",
             alignSelf: "center",
+            backgroundColor:'#cccc'
           }}
         >
           
@@ -142,14 +147,14 @@ const EditProfile = () => {
             onChangeText={(text)=>setUsername(text)}
           />
         </View>
-        <View style={{gap:10}}>
+        {/* <View style={{gap:10}}>
           <Text>E-mail</Text>
           <TextInput
             placeholder="Test"
             value={email}
             style={{ borderWidth: 1, padding: 10 , borderRadius:5}}
           />
-        </View>
+        </View> */}
       </View>
       <View style={{flexDirection:'row',width:'100%',justifyContent:'center',gap:20,marginTop:30}}>
         <TouchableOpacity onPress={()=>navigation.goBack()} style={{justifyContent:'center',alignItems:'center',height:45,borderWidth:1,paddingHorizontal:20 , width:'40%',borderRadius:5,borderColor:'#03ba55',borderWidth:2}}>

@@ -24,6 +24,7 @@ const HomeScreen = ({route}) => {
   const [cat,setCat] = useState([])
   const [topRated,setTopRated] = useState([])
   const [uname,setUname] = useState('')
+  const [mentors,setMentors] = useState([])
   const getHomeScrData = async () =>{
     const token = await AsyncStorage.getItem('token')
     const response = await fetch('http://192.168.0.107:8000/api/HomeScr',{
@@ -35,11 +36,66 @@ const HomeScreen = ({route}) => {
     
     setCat(resData.categories)
     setTopRated(resData.topRated)
+    setMentors(resData.mentors)
     console.log(topRated.length)
+    
+  }
+  const getUserName = async () => {
+    const token = await AsyncStorage.getItem('token')
+    const response = await fetch('http://192.168.0.107:8000/api/getLoggedInUserName',{
+      headers:{
+        "Authorization":`Bearer ${token}`
+      }
+    })
+    const resData = await response.json()
     setUname(resData.uname)
   }
+  const [listData,setListData] = useState([])
+  const [nb,setNb] = useState(0)
+  const getMyFavData = async () => {
+    const token = await AsyncStorage.getItem('token');
+    if (token !== null) {
+        try {
+            const response = await fetch('http://192.168.0.107:8000/api/getMyFav', {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            const resData = await response.json();
+            setListData(resData.fav);
+            // console.log(listData)
+            setNb(resData.count)
+            // console.log(resData.fav)
+            // console.log(resData.fav.length)
+            if(resData.fav.length !== 0){
+              await AsyncStorage.setItem('userfav',JSON.stringify(resData.fav))
+              // console.log(nb)
+              const itemstoGet = await AsyncStorage.getItem('userfav')
+              const loaded = JSON.parse(itemstoGet)
+              console.log(loaded.length)
+              console.log('data saved !')
+            }
+            else{
+              await AsyncStorage.setItem('userfav',JSON.stringify([]))
+            }
+            
+        } catch (err) {
+            console.log(err);
+        }
+    }
+};
+  const isFocused = useIsFocused()
   useEffect(()=>{
+      if (isFocused){
+        getMyFavData()
+        getUserName()
+      }
+      // getHomeScrData()
+  },[isFocused])
+  useEffect(()=> {
     getHomeScrData()
+    
   },[])
   /*const [currentIndex, setCurrentIndex] = useState(0);
   const carouselRef = useRef(null);*/
@@ -84,6 +140,15 @@ const HomeScreen = ({route}) => {
       cat:category
     })
   }
+  const CapitalizeFirstLetter  = (str) => {
+    let s = str.split("_")
+  }
+  const svgrect = `<svg width="114" height="115" viewBox="0 0 114 115" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="48.808" height="43.675" rx="10" transform="matrix(0.915504 0.402308 -0.380878 0.924625 16.6348 0)" fill="#D9D9D9" fill-opacity="0.17"/>
+  <rect width="28.3259" height="25.347" rx="10" transform="matrix(0.915504 0.402308 -0.380878 0.924625 22.6541 79.53)" fill="#D9D9D9" fill-opacity="0.17"/>
+  <rect width="48.808" height="43.675" rx="10" transform="matrix(0.915504 0.402308 -0.380878 0.924625 68.6348 43.3799)" fill="#D9D9D9" fill-opacity="0.17"/>
+  </svg>
+  `
   return (
     <ImageBackground
       source={require("../images/homeNoLogo.png")}
@@ -123,7 +188,8 @@ const HomeScreen = ({route}) => {
       </SafeAreaView> */}
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <SafeAreaView>
+        <View>
+          <View style={{marginTop:20}}  />
           <View
             style={{
               flexDirection: "row",
@@ -151,55 +217,54 @@ const HomeScreen = ({route}) => {
           </View>
           <Text style={styles.username}>Welcome, {uname}</Text>
           <TestScreen />
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginTop: 20 }}
-            contentContainerStyle={{ gap: 15,paddingHorizontal:20 }}
-          >
-            <View>
-              <ImageBackground
-                source={require("../images/jsyellow.png")}
-                style={styles.vidthumbnail}
+          
+          <View style={{ backgroundColor: "#fff" }}>
+            <View style={styles.catView}>
+              <Text
+                style={{ fontSize: 24, fontWeight: "bold", color: "#1E2A23" }}
               >
-                <TouchableOpacity>
-                  <IconButton
-                    icon={"play"}
-                    iconColor="#000"
-                    style={{ margin: 0, backgroundColor: "#d9d9d9" }}
-                  />
-                </TouchableOpacity>
-              </ImageBackground>
-              <View style={styles.belowVidThumbnail}>
-                <Text>Title</Text>
-                <Text>Duration</Text>
-              </View>
+              Mentors
+              </Text>
+              <TouchableOpacity 
+              style={styles.seeAllBtn}
+              onPress={()=>navigation.navigate("InstructorsList")}
+              >
+                <Text style={styles.seeText}>See All</Text>
+              </TouchableOpacity>
             </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 15, marginBottom: 20,paddingHorizontal:20 }}
+            >
+              {
+                mentors.map((m,idx) =>{
+                  return (
+                    <TouchableOpacity 
+                    onPress={()=>navigation.navigate("InstructorDetails",{
+                      instructorId:m.id,
+                      name:m.name.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
 
-            <View>
-              <ImageBackground
-                source={require("../images/jsyellow.png")}
-                style={styles.vidthumbnail}
-              >
-                <TouchableOpacity>
-                  <IconButton
-                    icon={"play"}
-                    iconColor="#000"
-                    style={{ margin: 0, backgroundColor: "#d9d9d9" }}
-                  />
-                </TouchableOpacity>
-              </ImageBackground>
-              
-              
-              <View style={styles.belowVidThumbnail}>
-                <Text>Title</Text>
-                <Text>Durationnn</Text>
-              </View>
-            </View>
-          </ScrollView>
+                      pp:m.profilepicture
+                    })}
+                    key={idx.toString()} 
+                    activeOpacity={1} 
+                    style={{alignItems:'center',gap:10}}>
+                      <Image 
+                      source={{uri:'http://192.168.0.107:8000/'+m.profilepicture}}
+                      style={{height:80,width:80,overflow:"hidden",borderRadius:50,backgroundColor:"#ccc"}}
+                      />
+                      <Text style={{fontWeight:"500",fontSize:16}}>
+                        {m.name.split("_")[0].charAt(0).toUpperCase() + m.name.split("_")[0].slice(1)}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+              })
+              }
+            </ScrollView>
+          </View>
           <View
             style={{
-              marginTop: 20,
               height: 3,
               backgroundColor: "#ccc",
               opacity: 0.6,
@@ -212,7 +277,10 @@ const HomeScreen = ({route}) => {
               >
                 Categories
               </Text>
-              <TouchableOpacity style={styles.seeAllBtn}>
+              <TouchableOpacity 
+              onPress={()=>navigation.navigate("CategoriesList")} 
+              style={styles.seeAllBtn}
+              >
                 <Text style={styles.seeText}>See All</Text>
               </TouchableOpacity>
             </View>
@@ -224,30 +292,41 @@ const HomeScreen = ({route}) => {
               {
                 cat.map((c,idx) =>{
                   return (
-                    <LinearGradient
-                    key={idx}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                colors={["#0AB072", "#02BA5D", "#11B741"]}
-                style={{
-                  width: 200,
-                  height: 120,
-                  justifyContent: "center",
-                  borderRadius: 15,
-                }}
+              <TouchableOpacity  
+              activeOpacity={1} 
+              key={idx}
+              onPress={()=>navigation.navigate("CategoryCourses",{
+                categoryId: c.id,
+                catName:c.name
+              })} 
               >
-                <Text
-                  style={{
-                    color: "#fff",
-                    fontSize: 24,
-                    fontWeight: "bold",
-                    width: 130,
-                    marginLeft: 20,
-                  }}
-                >
-                  {c.name}
-                </Text>
-              </LinearGradient>
+                    <LinearGradient
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      colors={["#0AB072", "#02BA5D", "#11B741"]}
+                      style={{
+                        width: 200,
+                        height: 120,
+                        justifyContent: "center",
+                        borderRadius: 15,
+                        position:'relative'
+                      }}
+                    >
+                      <SvgXml xml={svgrect} style={{position:'absolute',right:-30,top:-10}}  />
+                      <Text
+                        style={{
+                          color: "#fff",
+                          fontSize: 24,
+                          fontWeight: "bold",
+                          width: 130,
+                          marginLeft: 20,
+                        }}
+                      >
+                        {c.name}
+                      </Text>
+                    </LinearGradient>
+              </TouchableOpacity>
+                    
                   )
                 })
               }
@@ -265,17 +344,15 @@ const HomeScreen = ({route}) => {
               <Text
                 style={{ fontSize: 24, fontWeight: "bold", color: "#1E2A23" }}
               >
-                Top Rated
+                Recommended
               </Text>
-              <TouchableOpacity style={styles.seeAllBtn}>
-                <Text style={styles.seeText}>See All</Text>
-              </TouchableOpacity>
             </View>
-            <View style={{marginHorizontal:20,gap:25}}>
+            <View style={{marginHorizontal:20,gap:5}}>
             {
               topRated.map((tr,idx)=>{
                 if(tr.id !== isSelected){
                   return(
+                    <>
                     <TouchableOpacity onPress={()=>handleSelection(tr.id)} activeOpacity={.8} key={idx.toString()} style={{
                       flexDirection:'row',
                       justifyContent:'space-between',
@@ -290,7 +367,9 @@ const HomeScreen = ({route}) => {
                       style={{width:80,height:80,overflow:'hidden',borderRadius:7}}
                       />
                       <View style={{gap:10}}>
-                        <Text style={{fontWeight:"bold",fontSize:16, color:"#181818"}}>{tr.title}</Text>
+                        <Text style={{fontWeight:"bold",fontSize:16, color:"#181818"}}>
+                        {tr.title.length > 25 ? tr.title.slice(0,25)+'...' : tr.title}
+                        </Text>
                         <View style={{flexDirection:'row',gap:3}}>
                           <Ionicons name="star" />
                           <Text>{tr.rating}.0</Text>
@@ -298,7 +377,9 @@ const HomeScreen = ({route}) => {
                         <Text style={{fontWeight:"bold",fontSize:22,color:"#03B960"}}>${tr.price}</Text>
                       </View>
                     </View>
-                    <TouchableOpacity>
+                    <TouchableOpacity 
+                    onPress={()=>navigateToCourseDetails(tr.id,tr.get_category.name)}
+                    >
                     <LinearGradient
                       key={idx}
                   start={{ x: 0, y: 0 }}
@@ -321,11 +402,16 @@ const HomeScreen = ({route}) => {
                     </TouchableOpacity>
                     
                 </TouchableOpacity>
+                { idx !== topRated.length -1 ? <View style={{height:1,backgroundColor:"#ccc",width:"73%",alignSelf:'flex-end'}} /> : null }
+                </>
+                    
                   )
                 }
                 else{
                   return (
 
+                    
+                    <>
                     <TouchableOpacity onPress={()=>handleSelection(tr.id)} activeOpacity={.8} key={idx.toString()}>
                     <LinearGradient
                     style={{
@@ -347,7 +433,9 @@ const HomeScreen = ({route}) => {
                       style={{width:80,height:80,overflow:'hidden',borderRadius:7}}
                       />
                       <View style={{gap:10}}>
-                        <Text style={{fontWeight:"bold",fontSize:16, color:"#f5f5f5"}}>{tr.title}</Text>
+                        <Text style={{fontWeight:"bold",fontSize:16, color:"#f5f5f5"}}>
+                        {tr.title.length > 25 ? tr.title.slice(0,25)+'...' : tr.title}
+                        </Text>
                         <View style={{flexDirection:'row',gap:3}}>
                           <Ionicons name="star" color={"#f5f5f5"} />
                           <Text style={{color:"#f5f5f5"}}>{tr.rating}.0</Text>
@@ -372,8 +460,9 @@ const HomeScreen = ({route}) => {
                     
                 </LinearGradient>
                     </TouchableOpacity>
-
-                    
+                    {/* view lw7da */}
+                  { idx !== topRated.length -1 ? <View style={{height:1,backgroundColor:"#ccc",width:"73%",alignSelf:'flex-end'}} /> : null }
+                  </>
                   )
                 }
               })
@@ -381,7 +470,7 @@ const HomeScreen = ({route}) => {
             </View>
             
           </View>
-        </SafeAreaView>
+        </View>
       </ScrollView>
 
       {/* swiper */}
@@ -438,6 +527,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    
   },
   seeAllBtn: {
     backgroundColor: "#1E2A23",

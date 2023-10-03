@@ -11,11 +11,13 @@ import {
 } from "react-native";
 //import Animated,{ FadeInRight } from 'react-native-reanimated'
 import React, { useState, useEffect } from "react";
-import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
+import { useIsFocused, useNavigation, useRoute,StackActions } from "@react-navigation/native";
 import { IconButton } from "react-native-paper";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { defaultFormat } from "moment";
+import ToastMessage from "./ToastMessage/ToastMsg";
+import { Ionicons } from "@expo/vector-icons";
 const CourseDetails = ({route}) => {
   const {courseId,cat} = route.params
   // console.log(cat + courseId)
@@ -79,7 +81,40 @@ const CourseDetails = ({route}) => {
   const toggleShowMore = () => {
     setShowMore(!showMore);
   };
-
+  const [msg,setMsg] =useState("")
+  const toastRef = React.useRef(null)
+  const [toastType, setToastType] = useState("info");
+  const handleShowToast = () => {
+    if (toastRef.current) {
+      toastRef.current.show();
+    }
+  };
+  const addItemToCart = async () => {
+    const token = await AsyncStorage.getItem('token')
+    if(token !== null){
+        try{
+            const response = await fetch('http://192.168.0.107:8000/api/addItemToCart/'+courseId,{
+                method:"POST",
+                headers:{
+                    "Authorization":`Bearer ${token}`
+                }
+            })
+            const resData = await response.json()
+            console.log(resData.message)
+            
+            setMsg(resData.message)
+            if(resData.message!== 'item already in cart!' && resData.message !== 'bought' ){
+                // navigation.replace('BottomTab', { screen: 'ShoppingCart' });
+                navigation.dispatch(StackActions.replace('BottomTab', { screen: 'ShoppingCart' }));
+                return
+            }
+            handleShowToast()
+        }
+        catch(err){
+            console.log(err)
+        }
+    }
+  }
   return (
     <ScrollView>
       <Image source={{uri:'http://192.168.0.107:8000/'+course.thumbnail}}
@@ -125,6 +160,7 @@ const CourseDetails = ({route}) => {
               borderRadius: 10,
               paddingHorizontal: 12,
               paddingVertical: 10,
+              opacity:0
             }}
           >
             <Text
@@ -157,7 +193,7 @@ const CourseDetails = ({route}) => {
                 iconColor="#ffc107"
                 style={{ margin: 0 }}
               />
-              <Text style={{ marginLeft: -5, fontWeight: "600" }}>{course.rating}.0</Text>
+              <Text style={{ marginLeft: -5, fontWeight: "600" }}>{nbrev === 0 ? 0 : course.rating+'.0'}</Text>
             </View>
             <Text style={{ color: "#a9a9a9", fontWeight: "600" }}>({nbrev})</Text>
           </View>
@@ -219,36 +255,31 @@ const CourseDetails = ({route}) => {
             <Text style={{ fontSize: 20 }}>/5</Text>
           </View>
           <Text style={{ fontWeight: "500" }}>Based on {nbrev} Reviews</Text>
-          <View style={{ flexDirection: "row", alignSelf: "center" }}>
-            <IconButton
-              icon="star"
-              iconColor={ course.rating >= 1 ? "#ffc107" : "#b5b2b2"}
-              size={28}
-              style={styles.starIcon}
+          <View style={{ flexDirection: "row", alignSelf: "center",gap:3 }}>
+            <Ionicons
+            name="star"
+            color={ course.rating >= 1 ? "#ffc107" : "#b5b2b2"}
+            size={24}
             />
-            <IconButton
-              icon="star"
-              iconColor={ course.rating >= 2 ? "#ffc107" : "#b5b2b2"}
-              size={28}
-              style={styles.starIcon}
+            <Ionicons
+            name="star"
+            color={ course.rating >= 2 ? "#ffc107" : "#b5b2b2"}
+            size={24}
             />
-            <IconButton
-              icon="star"
-              iconColor={ course.rating >= 3 ? "#ffc107" : "#b5b2b2"}
-              size={28}
-              style={styles.starIcon}
+            <Ionicons
+            name="star"
+            color={ course.rating >= 3 ? "#ffc107" : "#b5b2b2"}
+            size={24}
             />
-            <IconButton
-              icon="star"
-              iconColor={ course.rating >= 4 ? "#ffc107" : "#b5b2b2"}
-              size={28}
-              style={styles.starIcon}
+            <Ionicons
+            name="star"
+            color={ course.rating >= 4 ? "#ffc107" : "#b5b2b2"}
+            size={24}
             />
-            <IconButton
-              icon="star"
-              iconColor={ course.rating >= 5 ? "#ffc107" : "#b5b2b2"}
-              size={28}
-              style={styles.starIcon}
+            <Ionicons
+            name="star"
+            color={ course.rating >= 5 ? "#ffc107" : "#b5b2b2"}
+            size={24}
             />
           </View>
         </View>
@@ -334,6 +365,7 @@ const CourseDetails = ({route}) => {
             ${course.price}.00
           </Text>
           <TouchableOpacity
+          onPress={addItemToCart}
             activeOpacity={0.7}
             style={{
               height: "100%",
@@ -351,9 +383,18 @@ const CourseDetails = ({route}) => {
               Add To Cart
             </Text>
           </TouchableOpacity>
+          
         </View>
       </View>
-
+      <View style={{position:"absolute",top:0}}>
+      {/* <ToastMessage
+        type={toastType}
+        text="Info"
+        description={msg === 'item already in cart!' ? 'Item Already In Cart' : 'Item Already Bought!'}
+        ref={toastRef} 
+        /> */}
+      </View>
+      
       <StatusBar barStyle="dark-content" />
     </ScrollView>
   );
@@ -379,7 +420,91 @@ const CourseDetailsCustomComponent = () => {
 
 const CourseDetailsExport = () => {
   const route = useRoute();
-  const [isBookmarkPressed, setIsBookmarkPressed] = useState(false);
+  const [isBookmarkPressed, setIsBookmarkPressed] = useState(null);
+  // console.log(route.params.cid)
+  const checkifInFav = async () => {
+    const token = await AsyncStorage.getItem('token')
+    if(token !== null){
+      try{
+        const response = await fetch('http://192.168.0.107:8000/api/checkIfInFav/'+route.params.cid,{
+          method:"GET",
+          headers:{
+            "Authorization":`Bearer ${token}`
+          }
+        })
+        const resData = await response.json()
+        console.log('resdata',resData)
+        setIsBookmarkPressed(resData === 0 ? false : true)
+      }
+      catch(err){
+        console.log(err)
+      }
+    }
+  }
+  const AddToFavorites = async () => {
+    // alert('hiiii')
+    const token = await AsyncStorage.getItem('token')
+    if(token !== null){
+      try{
+        const response = await fetch('http://192.168.0.107:8000/api/addToFav/'+route.params.cid,{
+          method:"POST",
+          headers:{
+            "Authorization":`Bearer ${token}`
+          }
+        })
+        const resData = await response.json()
+        console.log('ho')
+        console.log(resData)
+        console.log(resData.userFav)
+        if (resData.userFav !== undefined && resData.userFav !== null) {
+          await AsyncStorage.setItem('userfav', JSON.stringify(resData.userFav));
+          console.log('Data saved successfully');
+        } else {
+          console.warn('Data is undefined or null; not saving to AsyncStorage.');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      finally {
+        setIsBookmarkPressed(!isBookmarkPressed)
+      }
+    }
+  }
+
+  const RemoveFromFav = async () => {
+    // alert('hi')
+    const token = await AsyncStorage.getItem('token')
+    if(token !== null){
+      try{
+        const response = await fetch('http://192.168.0.107:8000/api/deleteFromFav/'+route.params.cid,{
+          method:"POST",
+          headers:{
+            "Authorization":`Bearer ${token}`
+          }
+        })
+        const resData = await response.json()
+        if (resData.userFav !== undefined && resData.userFav !== null) {
+          await AsyncStorage.setItem('userfav', JSON.stringify(resData.userFav));
+          console.log('Data saved successfully');
+        } else {
+          console.warn('Data is undefined or null; not saving to AsyncStorage.');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      finally{
+        setIsBookmarkPressed(!isBookmarkPressed)
+      }
+    }
+  }
+  const HandleBookmark = () => {
+
+    alert('hi')
+  }
+  
+  React.useEffect(()=>{
+    checkifInFav()
+  },[])
   return (
     <Stack.Navigator>
       <Stack.Screen
@@ -396,12 +521,11 @@ const CourseDetailsExport = () => {
           headerRight: () => {
             return (
               <TouchableOpacity
-                onPress={() => setIsBookmarkPressed(!isBookmarkPressed)}
+                onPress={isBookmarkPressed === false ? AddToFavorites : RemoveFromFav}
               >
                 <IconButton
                   icon={isBookmarkPressed ? "bookmark" : "bookmark-outline"}
                   style={{ margin: 0 }}
-                  animated
                   iconColor="#000"
                 />
               </TouchableOpacity>

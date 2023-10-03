@@ -61,9 +61,11 @@ const App = () => {
   const _renderItem = ({ item }) => {
     return (
       <View style={styles.itemContainer}>
-        <TouchableWithoutFeedback onPress={()=>navigation.navigate("CourseDetails",{
+        <TouchableWithoutFeedback onPress={()=>navigation.navigate( item.type === 'mp4' ? "CourseDetails" : "BookDetails",{
             cid:item.id,
-            cat:item.get_category.name
+            cat:item.get_category.name,
+            uploader:item.get_user.name,
+            cType:item.type
         })}>
         <View style={{ width: '100%', borderTopLeftRadius: 10, borderTopRightRadius: 10, overflow: 'hidden' }}>
           <Image 

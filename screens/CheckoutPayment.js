@@ -13,8 +13,6 @@ import { Secret_key, STRIPE_PUBLISHABLE_KEY } from './keys/keys';
 import { TouchableWithoutFeedback } from 'react-native';
 import { Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { toEditorSettings } from 'typescript';
-
 // create a component
 const CURRENCY = 'USD';
 var CARD_TOKEN = null;
@@ -76,7 +74,7 @@ const StripeGateway = ({route}) => {
     const token = await AsyncStorage.getItem('token')
     if(token !==null) {
       try{
-        const response = await fetch('http://192.168.0.107:8000/api/checkoutCart',{
+        const response = await fetch('http://192.168.0.102:8000/api/checkoutCart',{
           method:"POST",
           headers:{
             "Authorization":`Bearer ${token}`
@@ -118,7 +116,7 @@ const StripeGateway = ({route}) => {
     } else {
      
       let payment_data = await charges();
-      console.log('pament_data', payment_data);
+      console.log('payment_data', payment_data);
       if(payment_data.status == 'succeeded')
       {
         alert("Payment Successful !");

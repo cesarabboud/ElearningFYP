@@ -1,8 +1,8 @@
 import { 
-  StyleSheet, Text, View, Image, StatusBar,TouchableOpacity, Dimensions,ScrollView ,SafeAreaView
+  StyleSheet, Text, View, Image, StatusBar,TouchableOpacity, Dimensions,ScrollView ,SafeAreaView,Modal,TouchableHighlight
 } from "react-native";
 import { IconButton } from "react-native-paper";
-import React from "react";
+import React,{useState} from "react";
 const screenWidth = Dimensions.get('window').width
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ChartSet from "./DonutChart/ChartSet";
@@ -11,31 +11,69 @@ import PieChart from "./PieChart/PieChart";
 import Constants from "expo-constants";
 import { Ionicons } from "@expo/vector-icons";
 import { SvgXml } from "react-native-svg";
+import {StackActions, useNavigation } from "@react-navigation/native";
+import { Button } from "react-native";
+import MyChart from './PieChart/PieChart2'
+import LeaderBoards from "./LeaderBoards";
 const AdminProfile = () => {
-  const [user,setUser] = React.useState()
+  const [user,setUser] = React.useState({})
   const getLoggedInUserDetails = async () =>{
     const token = await AsyncStorage.getItem('token')
+    if(token !== null){
+      try{
+        const response = await fetch("http://192.168.0.107:8000/api/getLoggedInUserDetails",{
+          method:"GET",
+          headers:{
+            "Accept": 'application/json',
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        })
+        const resData = await response.json()
+        // console.log(resData.user)
+        setUser(resData.user)
+        // console.log('user',user)
+        //setImage(user.profilepicture)
+        //console.log(resData.user.name)
+        // console.log(user)
+      }
+      catch(err){
+        console.log('error:',err)
+      }
+    }
+    
+  }
+  
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const toggleModal = () => {
+    setIsModalVisible(!isModalVisible);
+  };
+  const navigation = useNavigation()
+  const handleLogout = async () =>{
     try{
-      const response = await fetch("http://192.168.0.107:8000/api/getLoggedInUserDetails",{
-        method:"GET",
-        headers:{
-          "Accept": 'application/json',
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      })
-      const resData = await response.json()
-      console.log(resData.user)
-      setUser(resData.user)
-      console.log('user',user)
-      //setImage(user.profilepicture)
-      //console.log(resData.user.name)
-      // console.log(user)
+      const val = await AsyncStorage.getItem('token')
+      if(val !== null){
+        const response = await fetch('http://192.168.0.107:8000/api/logout',{
+          method: 'POST',
+          headers:{
+            "Accept": 'application/json',
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${val}`,
+          }
+        })
+        const resData = await response.json()
+        console.log(resData.message)
+        navigation.dispatch(StackActions.replace("LoginScreen"))
+      }
+      
     }
     catch(err){
-      console.log('error:',err)
+      console.log(err)
     }
+    
   }
+
   React.useEffect(()=>{
     getLoggedInUserDetails()
   },[])
@@ -72,31 +110,78 @@ const AdminProfile = () => {
       </View> */}
       <View style={styles.fixedView}>
         {/* Content that you want to be fixed */}
-        <View style={{marginTop:10,flexDirection:'row',justifyContent:'space-between',alignItems:'center',height:40,marginHorizontal:20}}>
-          <Ionicons name="menu" size={20} style={{opacity:0}}/>
-          <View style={{flexDirection:'row',alignItems:'center'}}>
+        <View style={{marginTop:10,flexDirection:'row',justifyContent:'space-between',alignItems:'center',height:40,marginHorizontal:10}}>
+        <Image
+            source={{uri:'http://192.168.0.107:8000/'+user.profilepicture}}
+            resizeMode="cover"
+            style={{ height: 30, width: 30, borderRadius: 100,backgroundColor:'#ccc' }}
+            />
+          <View style={{flexDirection:'row',alignItems:'center',justifyContent:'center',gap:-5}}>
           <SvgXml xml={svgLogo} width={80}/>
           <Text>Analytics</Text>
           </View>
-          <View style={{borderRadius:30}}>
-            <Image
-            source={require('../images/profilepic.jpg')}
-            resizeMode="cover"
-            style={{ height: 30, width: 30, borderRadius: 100,backgroundColor:'#fff' }}
-            />
+          <View style={{flexDirection:'row',alignItems:'center',gap:3}}>
+            <Button onPress={handleLogout} title="log out"/>
+            
+            {/* <Ionicons 
+            name={isModalVisible ? "caret-up-outline" : "caret-down-outline"} 
+            onPress={toggleModal}
+            /> */}
+            {/* <Modal visible={isModalVisible} onRequestClose={toggleModal} transparent>
+        <TouchableOpacity onPress={toggleModal} style={{ flex: 1 }}>
+          <View style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)', flex: 1 }}>
+            <View style={styles.modalStyle}>
+            <View style={{flexDirection:'row',alignItems:'center'}}>
+                <Ionicons name="create-outline" size={20}/>
+                <Text>Edit Profile</Text>
+              </View>
+              <TouchableOpacity style={{flexDirection:'row',alignItems:'center'}}>
+                <Ionicons onPress={handleLogout} name="log-out" size={35}/>
+                <Text>Log Out</Text>
+              </TouchableOpacity>
+
+                <Text onPress={toggleModal}>Close modal</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal> */}
           </View>
 
         </View>
       </View>
-      <ScrollView contentContainerStyle={{marginTop:70}}>
+      <ScrollView contentContainerStyle={{marginTop:70,paddingBottom:90}}>
       <ChartSet />
+      <View 
+      style={{backgroundColor:'#fff',
+      padding:10,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.4,
+      shadowRadius: 5,
+      shadowColor: "#171717",
+      marginHorizontal:10
+      }}>
       <PricesBarChart />
-      <Text style={{textAlign:'center',fontSize:22}}>Bar Chart Showing the Average Prices of Courses in terms of Types.</Text>
-      <PieChart/>
-      <Text style={{textAlign:'center',fontSize:22,marginBottom:70}}>Pie Chart Representing the Courses Compostion.
-      </Text>
-      </ScrollView>
+      <Text style={{textAlign:'center',fontSize:22,marginTop:10}}>Bar Chart Showing the Average Prices of Courses in terms of Types.</Text>
+      </View>
       
+      <View 
+      style={{backgroundColor:'#fff',
+      padding:10,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.4,
+      shadowRadius: 5,
+      shadowColor: "#171717",
+      marginHorizontal:10,
+      marginTop:10
+      }}>
+      <PieChart/>
+      <Text style={{textAlign:'center',fontSize:22}}>Pie Chart Representing the Courses Compostion By Type.
+      </Text>
+      </View>
+      
+      <MyChart />
+      <LeaderBoards />
+      </ScrollView>
       
         
         {/* <View style={{alignItems:'center',marginTop:30}}>
@@ -190,4 +275,12 @@ const styles = StyleSheet.create({
     borderBottomWidth:1,
     borderBottomColor:'#ccc'
   },
+  modalStyle:{
+    position: 'absolute', 
+    top: 75, 
+    right: 10,
+    backgroundColor:'#f5f5f5',
+    padding:30,
+    borderRadius:10
+  }
 });

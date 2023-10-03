@@ -1,9 +1,9 @@
-import { View, Text, ScrollView, Image, TouchableOpacity, StatusBar } from "react-native";
+import { View, Text, ScrollView, Image, TouchableOpacity, StatusBar,TouchableWithoutFeedback } from "react-native";
 import Animated, { FadeInRight, FadeInLeft } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { Button, IconButton } from "react-native-paper";
 import React,{useState,useEffect} from "react";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation,StackActions, useIsFocused } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ToastMessage from "./ToastMessage/ToastMsg";
 const App = ({route}) => {
@@ -39,6 +39,31 @@ const App = ({route}) => {
           if(resData.nbcourses){
             console.log(resData.nbcourses)
             setSearchRes(resData.courses)
+            try{
+              const myFav = await AsyncStorage.getItem('userfav')
+              const loaded = JSON.parse(myFav)
+              console.log('loaded',loaded)
+              if(loaded.length !==0){
+                console.log('hi loaded')
+                const UpdatedSearchRes = resData.courses.map(item => ({
+                  ...item,
+                  isFav: loaded.some(loadedItem => loadedItem.pivot.course_id === item.id) ? true : false
+                }));
+                setSearchRes(UpdatedSearchRes)
+                console.log('res',searchRes)
+              }
+              else{
+                const UpdatedSearchRes = resData.courses.map(item => ({
+                  ...item,
+                  isFav: false,
+                }));
+                setSearchRes(UpdatedSearchRes)
+                console.log('res',searchRes)
+              }
+            }
+            catch(err){
+              console.log(err)
+            }
           }
         }
         catch(err){
@@ -46,9 +71,65 @@ const App = ({route}) => {
         }
       }
     }
+    const AddToFavorites = async (id) => {
+      // alert('hiiii')
+      const token = await AsyncStorage.getItem('token')
+      if(token !== null){
+        try{
+          const response = await fetch('http://192.168.0.107:8000/api/addToFav/'+id,{
+            method:"POST",
+            headers:{
+              "Authorization":`Bearer ${token}`
+            }
+          })
+          const resData = await response.json()
+          console.log('ho')
+          console.log(resData)
+          console.log(resData.userFav)
+          if (resData.userFav !== undefined && resData.userFav !== null) {
+            await AsyncStorage.setItem('userfav', JSON.stringify(resData.userFav));
+            console.log('Data saved successfully');
+            SearchByFilters()
+          } else {
+            console.warn('Data is undefined or null; not saving to AsyncStorage.');
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  
+    const RemoveFromFav = async (id) => {
+      // alert('hi')
+      const token = await AsyncStorage.getItem('token')
+      if(token !== null){
+        try{
+          const response = await fetch('http://192.168.0.107:8000/api/deleteFromFav/'+id,{
+            method:"POST",
+            headers:{
+              "Authorization":`Bearer ${token}`
+            }
+          })
+          const resData = await response.json()
+          if (resData.userFav !== undefined && resData.userFav !== null) {
+            await AsyncStorage.setItem('userfav', JSON.stringify(resData.userFav));
+            console.log('Data saved successfully');
+            SearchByFilters()
+          } else {
+            console.warn('Data is undefined or null; not saving to AsyncStorage.');
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  const isFocused = useIsFocused()
   useEffect(()=>{
-    SearchByFilters()
-  },[]) 
+    if(isFocused){
+      SearchByFilters()
+    }
+    
+  },[isFocused]) 
   const [toastType, setToastType] = useState("info");
   const toastRef = React.useRef(null);
   const [msg,setMsg] = useState(null)
@@ -130,12 +211,22 @@ const App = ({route}) => {
           entering={FadeInRight.delay((idx+1) * 500)}
           key={idx.toString()}
         >
-          <IconButton icon={"heart-outline"} iconColor="#03ba55"/>
+          {
+            prod.isFav === false ? <IconButton onPress={()=>AddToFavorites(prod.id)} icon={"heart-outline"} iconColor={"#03ba55"}/>
+            : <IconButton onPress={()=>RemoveFromFav(prod.id)} icon={"heart"} iconColor={"red"}/>
+          }
           <View style={{alignSelf:'center'}}>
+          <TouchableWithoutFeedback onPress={()=>navigation.navigate(prod.type === 'mp4' ? "CourseDetails" : "BookDetails",{
+              cid:prod.id,
+              cat:prod.get_category.name,
+              uploader:prod.get_user.name,
+              cType:prod.type
+            })}>
           <Image
             source={{uri:'http://192.168.0.107:8000/'+prod.thumbnail}}
             style={{ width: 200, height: 250,  marginBottom: 12}}
           />
+          </TouchableWithoutFeedback>
           </View>
           
           <Text style={{ textAlign:'left' , marginTop: 20,color:'#fff',fontSize: 14, fontWeight: '600', }}>

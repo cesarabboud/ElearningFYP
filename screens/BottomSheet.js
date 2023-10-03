@@ -4,7 +4,7 @@ import { GestureHandlerRootView, PanGestureHandler } from "react-native-gesture-
 import { IconButton, Portal, Provider } from "react-native-paper";
 
 const BottomSheet = ({ show, onDismiss, enableBackdropDismiss, children }) => {
-  const bottomSheetHeight = Dimensions.get("window").height * 0.58;
+  const bottomSheetHeight = Dimensions.get("window").height * 0.5;
   const deviceWidth = Dimensions.get("window").width;
   const [open, setOpen] = useState(show);
   const bottom = useRef(new Animated.Value(-bottomSheetHeight)).current;

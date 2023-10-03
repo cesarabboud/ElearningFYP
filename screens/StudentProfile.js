@@ -18,7 +18,7 @@ import {
 } from "react-native";
 import { IconButton, Provider } from "react-native-paper";
 import BottomSheet from "./BottomSheet";
-import { useNavigation } from "@react-navigation/native";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 import * as WebBrowser from 'expo-web-browser';
 import { SvgXml } from "react-native-svg";
 import { readAsStringAsync } from "expo-file-system";
@@ -32,7 +32,7 @@ const  StudentProfile = () => {
   const navigation = useNavigation();
   const [result, setResult] = useState(null);
   const [user,setUser] = useState({})
-  
+  const [role,setRole] = useState("")
   const getLoggedInUserDetails = async () =>{
     const val = await AsyncStorage.getItem('token')
     try{
@@ -48,6 +48,8 @@ const  StudentProfile = () => {
       
       console.log(resData.user)
       setUser(resData.user)
+      setRole(resData.user.get_role.name)
+      console.log(role)
       // console.log(user)
     }
     catch(err){
@@ -58,11 +60,11 @@ const  StudentProfile = () => {
   // React.useEffect(()=>{
   //   getLoggedInUserDetails()
   // },[])
-
+  const isFocused = useIsFocused()
   React.useEffect(()=>{
-    
+    if(isFocused)
     getLoggedInUserDetails();
-  },[])
+  },[isFocused])
   const handlePressButtonAsync = async () => {
     //const modifiedLink = `http://${link}`;
     let result = await WebBrowser.openBrowserAsync('http://google.com.lb');
@@ -82,7 +84,12 @@ const  StudentProfile = () => {
       })
       const resData = await response.json()
       console.log(resData.message)
-      navigation.dispatch(StackActions.replace("LoginScreen"))
+      // navigation.dispatch(StackActions.replace("LoginScreen"))
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'LoginScreen' }], // Replace 'Login' with your actual login screen name
+      })
+      // navigation.navigate("LoginScreen")
     }
     catch(err){
       console.log(err)
@@ -136,7 +143,9 @@ const  StudentProfile = () => {
           <Text style={{ color: "#fff", fontSize: 18, fontWeight: "600" }}>
             {user.name}
           </Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={()=>navigation.navigate("EditProfile",{
+            rolee:"Student"
+          })}>
             <Text
               style={{ color: "#03ba55", fontWeight: "500", marginBottom: 10 }}
             >
@@ -148,7 +157,7 @@ const  StudentProfile = () => {
           style={{ width: "100%", height: 1, backgroundColor: "#81008C" }}
         /> */}
         <View style={{ padding: 20, gap: 15 }}>
-          <TouchableOpacity activeOpacity={0.6}>
+          {/* <TouchableOpacity activeOpacity={0.6}>
             <View
               style={{
                 flexDirection: "row",
@@ -168,8 +177,8 @@ const  StudentProfile = () => {
               </View>
               <IconButton icon="chevron-right" size={20} />
             </View>
-          </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.6}>
+          </TouchableOpacity> */}
+          <TouchableOpacity activeOpacity={0.6} onPress={()=>navigation.navigate("OrdersPage")}>
             <View
               style={{
                 flexDirection: "row",
@@ -181,12 +190,12 @@ const  StudentProfile = () => {
             >
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <IconButton icon="wallet-outline" size={24} iconColor="#000" />
-                <Text>Wallet</Text>
+                <Text>My Orders</Text>
               </View>
               <IconButton icon="chevron-right" size={20} />
             </View>
           </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.6}>
+          {/* <TouchableOpacity activeOpacity={0.6}>
             <View
               style={{
                 flexDirection: "row",
@@ -202,7 +211,7 @@ const  StudentProfile = () => {
               </View>
               <IconButton icon="chevron-right" size={20} />
             </View>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TouchableOpacity activeOpacity={0.6} onPress={()=>navigation.navigate("ForgotPasswordScreen")}>
             <View
               style={{
@@ -229,6 +238,7 @@ const  StudentProfile = () => {
             width: ScreenWidth - 40,
             paddingVertical: 20,
             borderRadius: 10,
+            marginTop:170
           }}
         >
           <Text
@@ -354,11 +364,11 @@ const  StudentProfile = () => {
                 style={{ flexDirection: "row", alignItems: "center" }}
               >
                 <TouchableOpacity onPress={() => navigation.navigate("MyPDFs")}>
-                  <IconButton icon="file-pdf-box" iconColor="#000" />
+                  <IconButton icon="notebook-outline" iconColor="#000" />
                   
                 </TouchableOpacity>
 
-                <Text>My PDFs</Text>
+                <Text>My Courses</Text>
               </TouchableOpacity>
               <View
                 style={{
@@ -368,7 +378,7 @@ const  StudentProfile = () => {
                   alignSelf: "flex-end",
                 }}
               />
-              <TouchableOpacity onPress={()=>navigation.navigate("Wishlist")} style={{ flexDirection: "row", alignItems: "center" }}>
+              <TouchableOpacity onPress={()=>navigation.navigate("MyWishlist")} style={{ flexDirection: "row", alignItems: "center" }}>
                 <TouchableOpacity>
                   <IconButton icon="star-outline" iconColor="#000" />
                 </TouchableOpacity>
@@ -383,7 +393,7 @@ const  StudentProfile = () => {
                   alignSelf: "flex-end",
                 }}
               />
-              <TouchableOpacity onPress={()=>navigation.navigate("MyCourses")} style={{ flexDirection: "row", alignItems: "center" }}>
+              {/* <TouchableOpacity onPress={()=>navigation.navigate("MyCourses")} style={{ flexDirection: "row", alignItems: "center" }}>
                 <TouchableOpacity>
                   <IconButton icon="file-video-outline" iconColor="#000" />
                 </TouchableOpacity>
@@ -397,7 +407,7 @@ const  StudentProfile = () => {
                   height: 1,
                   alignSelf: "flex-end",
                 }}
-              />
+              /> */}
               <TouchableOpacity
                 onPress={() => setModalVisible(!modalVisible)}
                 style={{ flexDirection: "row", alignItems: "center" }}

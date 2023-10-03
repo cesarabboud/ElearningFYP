@@ -35,8 +35,7 @@ const BarChartExample = () => {
             const resData = await response.json()
             // console.log(resData);
             setNewData(resData.prices)
-            setTypes(resData.types)
-            setTypes(types.map((type)=>type.toUpperCase()))
+            setTypes(resData.types.map((t)=>t.toUpperCase()))
         }
         catch(err){
             console.log(err)

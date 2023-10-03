@@ -48,9 +48,12 @@ const RegisterScreen = ({ navigation }) => {
   const [isFilleduname,setIsFilleduname] = useState(true)
   const [isFilledEmail,setIsFilledEmail] = useState(true)
   const [isFilledPassword,setIsFilledPassword] = useState(true)
-
+  const [validationMessage,setValidationMessage] = useState({})
   const myFct = () => {
-
+    const regex = /^(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\-])(?=.*[0-9])(?=.*[A-Z]).{8,}$/;
+    const endsWithGmail = /@(gmail\.com|outlook\.com)$/i;
+    
+    const validationObj = {}
     if(username=== '' && email === '' && password === ''){
       // alert('check your input fields')
       setIsFilledEmail(false)
@@ -60,17 +63,43 @@ const RegisterScreen = ({ navigation }) => {
     }
     if(username === ''){
       setIsFilleduname(false)
-      return
+      
     }
     if(email === ''){
       setIsFilledEmail(false)
-      return
+      if(validationMessage.emailerror){
+        console.log('why')
+        delete validationObj.emailerror
+        setValidationMessage(validationObj)
+      }
     }
     if(password===''){
       setIsFilledPassword(false)
+      if(validationMessage.passerror){
+        delete validationObj.passerror
+        setValidationMessage(validationObj)
+      }
+    }
+    if(username ==='' || email === '' || password ===''){
       return
     }
+    if(regex.test(password)=== false){
+      validationObj.passerror = `Password should be at least 8 characters long, include a number, a capital letter and a special character !`
+    }
+    if(email !== ''){
+      if(endsWithGmail.test(email) === false){
+        setIsFilledEmail(true)
+        validationObj.emailerror = `Check your email !`
+      }
+    }
+    
+    setValidationMessage(validationObj)
+    console.log(validationMessage)
+    console.log('ok')
+    if(Object.keys(validationObj).length === 0){
       navigation.navigate("OnBoarding",{ uname:username,email:email,pword:password   })
+    }
+      
   }
   return (
     <ImageBackground
@@ -135,6 +164,9 @@ const RegisterScreen = ({ navigation }) => {
               {!isFilledEmail ? (
         <Text style={{color:"#ba1629"}}>Email is required</Text>
       ) : null}
+              {
+                validationMessage.emailerror ? <Text style={{color:"#ba1629"}}>{validationMessage.emailerror !== '' ?validationMessage.emailerror : null}</Text> : null
+              }
               </View>
               <View style={{gap:5}}>
               <TextInput
@@ -161,6 +193,9 @@ const RegisterScreen = ({ navigation }) => {
               {!isFilledPassword ? (
         <Text style={{color:"#ba1629"}}>Password is required</Text>
       ) : null}
+              {
+                validationMessage.passerror ? <Text style={{width:250,color:"#ba1629"}}>{validationMessage.passerror}</Text> : null
+              }
               </View>
               
             </View>

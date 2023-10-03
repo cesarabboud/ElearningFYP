@@ -77,7 +77,7 @@ const UploadCourse = () => {
           .then((resData) => {
             setCat(resData.categories);
             console.log("cat:", cat);
-            const newArray = cat.map((item,idx) => {
+            const newArray = resData.categories.map((item,idx) => {
               return {
                 label: item,
                 value: item,
@@ -95,10 +95,8 @@ const UploadCourse = () => {
   };
   const isFocused = useIsFocused();
   useEffect(() => {
-    if (isFocused) {
       GetCategories();
-    }
-  }, [isFocused]);
+  }, []);
   const navigation = useNavigation()
   const uploadDocument = async () => {
     if (
@@ -143,7 +141,7 @@ const UploadCourse = () => {
         formData.append("category", category);
 
         const response = await fetch(
-          "http://192.168.0.107:8000/api/uploadPDF",
+          "http://192.168.0.107:8000/api/uploadCourse",
           {
             method: "POST",
             body: formData,
@@ -206,7 +204,7 @@ const UploadCourse = () => {
           onPress={pickImage}
         >
           <IconButton
-            icon={"cloud-upload-outline"}
+            icon={"file-image"}
             iconColor="#fff"
             size={50}
             style={{ margin: -5 }}
@@ -236,7 +234,7 @@ const UploadCourse = () => {
             size={50}
             style={{ margin: -5 }}
           />
-          <Text style={{ color: "#fff", fontSize: 20 }}>Upload Video</Text>
+          <Text style={{ color: "#fff", fontSize: 20 }}>Upload Course</Text>
         </TouchableOpacity>
       ) : (
         <>

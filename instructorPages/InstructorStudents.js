@@ -8,7 +8,7 @@ import {
   StatusBar,
   SafeAreaView,
   Image,
-  Button,
+  
   TouchableWithoutFeedback,
 } from "react-native";
 import React, { useState,useEffect } from "react";
@@ -17,6 +17,7 @@ import {
   DataTable,
   Provider,
   FAB,
+  Button,
   AnimatedFAB,
 } from "react-native-paper";
 import Modal from "react-native-modal";
@@ -27,28 +28,31 @@ import { Buffer as NodeBuffer } from "buffer";
 import * as FileSystem from "expo-file-system";
 import ExcelJS from "exceljs";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { Ionicons } from "@expo/vector-icons";
 const StudentsList = () => {
 
   const getmyStd = async () =>{
     const val = await AsyncStorage.getItem('token')
-    try{
-      const response = await fetch('http://192.168.0.107:8000/api/getInstructorProfileInfo',{
-        method: 'GET',
-        headers:{
-          "Accept": 'application/json',
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${val}`,
-        }
-      })
-      const resData = await response.json()
-      console.log(resData.mystudents)
-      setmyStudents(resData.mystudents)
-      //console.log(myStudents.length)
+    if(val !== null){
+      try{
+        const response = await fetch('http://192.168.0.107:8000/api/getInstructorProfileInfo',{
+          method: 'GET',
+          headers:{
+            "Accept": 'application/json',
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${val}`,
+          }
+        })
+        const resData = await response.json()
+        console.log(resData.mystudents)
+        setmyStudents(resData.mystudents)
+        //console.log(myStudents.length)
+      }
+      catch(err){
+        console.log(err)
+      }
     }
-    catch(err){
-      console.log(err)
-    }
+    
   }
   const [myStudents,setmyStudents] = useState([])
   const isFocused = useIsFocused()
@@ -163,7 +167,81 @@ const StudentsList = () => {
   const handleModalClose = () => {
     setShowSortModal(false);
   };
+  const MyTableSearchRes = (props) => {
+    const name = props.name
+    const [page, setPage] = React.useState(0);
+    const [numberOfItemsPerPageList] = React.useState([1,2,5]);
+    const [itemsPerPage, onItemsPerPageChange] = React.useState(
+      numberOfItemsPerPageList[1]
+    );
 
+    const from = page * itemsPerPage;
+    const to = Math.min((page + 1) * itemsPerPage, myStudents.length);
+    const filteredStudents = myStudents.filter((c) => c.name.toLowerCase().includes(name.toLowerCase()));
+    React.useEffect(() => {
+      setPage(0);
+    }, [itemsPerPage]);
+    const navigation = useNavigation()
+    if(filteredStudents.length !== 0){
+      return (
+        <>
+        <Text style={{margin:15,fontSize:22,fontWeight:"600"}}>{filteredStudents.length} Result{filteredStudents.length !== 1 ? `s` : null} Found.</Text>
+        <DataTable>
+          <DataTable.Header>
+            <DataTable.Title textStyle={{}}>#</DataTable.Title>
+            <DataTable.Title><Text>Image</Text></DataTable.Title>
+            <DataTable.Title>Username</DataTable.Title>
+            <DataTable.Title>Email</DataTable.Title>
+            <DataTable.Title></DataTable.Title>
+          </DataTable.Header>
+  
+          {filteredStudents.slice(from, to).map((item) => (
+            <DataTable.Row  key={item.id}>
+              <DataTable.Cell 
+              onPress={()=>navigation.navigate("StudentDetails",{
+                studId:item.id,
+                fullName:item.name,
+                email:item.email,
+                pp:item.pp
+              })}
+              >{item.id}</DataTable.Cell>
+              <DataTable.Cell>
+                <View style={{ borderRadius: "100", overflow: "hidden",justifyContent:'center',alignItems:'center',backgroundColor:"#ccc" }}>
+                  <Image
+                    source={{uri:'http://192.168.0.107:8000/'+item.profilepicture}}
+                    resizeMode='stretch'
+                    style={{ width: 35, height: 35 ,}}
+                  />
+                </View>
+              </DataTable.Cell>
+              <DataTable.Cell>{item.name}</DataTable.Cell>
+              <DataTable.Cell>{item.email}</DataTable.Cell>
+            </DataTable.Row>
+          ))}
+          
+          <DataTable.Pagination
+            
+            page={page}
+            numberOfPages={Math.ceil(filteredStudents.length / itemsPerPage)}
+            onPageChange={(page) => setPage(page)}
+            label={`${from + 1}-${to} of ${filteredStudents.length}`}
+            numberOfItemsPerPageList={numberOfItemsPerPageList}
+            numberOfItemsPerPage={itemsPerPage}
+            onItemsPerPageChange={onItemsPerPageChange}
+            showFastPaginationControls
+            
+            selectPageDropdownLabel={"Rows per page"}
+          />
+        </DataTable>
+        </>
+      );
+    }
+    return (
+      <View style={{flex:1,justifyContent:'center',alignItems:'center'}}>
+        <Text style={{fontWeight:"600",fontSize:24}}>No results found.</Text>
+      </View>
+    )
+  };
   const MyTable = () => {
     if(myStudents.length > 0){
       const [page, setPage] = React.useState(0);
@@ -191,9 +269,7 @@ const StudentsList = () => {
 
         {myStudents.slice(from, to).map((item) => (
           <DataTable.Row key={item.key}>
-            <DataTable.Cell
-              onPress={() => navigation.navigate("StudentDetails")}
-            >
+            <DataTable.Cell>
               {item.id}
             </DataTable.Cell>
             <DataTable.Cell>
@@ -242,7 +318,7 @@ const StudentsList = () => {
       <View
       style={{ width: "30%", alignSelf: "flex-end", marginRight: 10 }}
     >
-      <FAB
+      {/* <FAB
         style={{ borderRadius: 10, backgroundColor: "#03ba55" }}
         color="#000"
         icon="export"
@@ -250,7 +326,7 @@ const StudentsList = () => {
         label="Export"
         customSize={40}
         mode="flat"
-      />
+      /> */}
     </View>
     </>
     );
@@ -265,107 +341,95 @@ const StudentsList = () => {
       <Provider>
         <TouchableWithoutFeedback onPress={handleScreenPress}>
           <View style={styles.container}>
+          <View
+          style={{
+            backgroundColor: "#03ba55",
+            borderBottomLeftRadius: 20,
+            borderBottomRightRadius: 20,
+          }}
+        >
+          <Text
+            style={{
+              textAlign: "center",
+              marginTop: 30,
+              fontSize: 20,
+              fontWeight: "500",
+            }}
+          >
+            Students({myStudents.length})
+          </Text>
+          
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-around",
+              height: 45,
+              borderRadius: 10,
+              backgroundColor: "white",
+              marginHorizontal: 15,
+              marginVertical: Constants.statusBarHeight,
+            }}
+          >
             <View
               style={{
-                backgroundColor: "#03ba55",
-                borderBottomLeftRadius: 20,
-                borderBottomRightRadius: 20,
+                flexDirection: "row",
+                alignItems: "center",
+                width: "75%",
               }}
             >
-              <Text
-                style={{
-                  textAlign: "center",
-                  marginTop: 30,
-                  fontSize: 20,
-                  fontWeight: "500",
-                }}
-              >
-                My Students({myStudents.length})
-              </Text>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-around",
-                  height: 60,
-                  borderRadius: 10,
-                  backgroundColor: "white",
-                  margin: 15,
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    width: "75%",
-                  }}
+              <Ionicons
+                name="search"
+                size={20}
+              />
+              <TextInput
+                style={{ padding: 10, fontSize: 20, width: "80%" }}
+                placeholder="Search"
+                value={searchText}
+                onChangeText={handleSearchTextChange}
+              />
+            </View>
+            <View style={{}}>
+              {showCancelButton ? (
+                <TouchableOpacity onPress={handleCancelPress}>
+                  <Text style={{ color: "#008BD9", fontSize: 20 }}>Cancel</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+            <Modal
+              isVisible={showSortModal}
+              onBackdropPress={handleModalClose}
+              animationIn={"fadeIn"}
+              animationOut={"fadeOut"}
+              backdropColor="rgba(0,0,0,.5)"
+              useNativeDriver={true}
+            >
+              <View style={styles.modalContainer}>
+                <TouchableOpacity
+                  style={styles.sortOption}
+                  onPress={() => handleSortOptionSelect("A-Z")}
                 >
-                  <IconButton
-                    icon="magnify"
-                    iconColor="#000"
-                    size={28}
-                    style={{ margin: 0 }}
-                  />
-                  <TextInput
-                    style={{
-                      padding: 10,
-                      fontSize: 20,
-                      width: "80%",
-                      fontWeight: "600",
-                      height: 30,
-                    }}
-                    placeholder="Search"
-                    value={searchText}
-                    onChangeText={handleSearchTextChange}
-                  />
-                </View>
-  
-                <View style={{}}>
-                  {showCancelButton ? (
-                    <TouchableOpacity onPress={handleCancelPress}>
-                      <Text style={{ color: "#008BD9", fontSize: 20 }}>
-                        Cancel
-                      </Text>
-                    </TouchableOpacity>
-                  ) : (
-                    <TouchableOpacity onPress={handleFilterPress}>
-                      <IconButton
-                        icon="filter-variant"
-                        iconColor="#000"
-                        size={28}
-                        style={{ margin: 0 }}
-                      />
-                    </TouchableOpacity>
-                  )}
-                </View>
-                <Modal
-                  isVisible={showSortModal}
-                  onBackdropPress={handleModalClose}
-                  animationIn={"fadeIn"}
-                  animationOut={"fadeOut"}
-                  backdropColor="rgba(0,0,0,.5)"
-                  useNativeDriver={true}
+                  <Text>A-Z</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.sortOption}
+                  onPress={() => handleSortOptionSelect("Z-A")}
                 >
-                  <View style={styles.modalContainer}>
-                    <TouchableOpacity
-                      style={styles.sortOption}
-                      onPress={() => handleSortOptionSelect("A-Z")}
-                    >
-                      <Text>A-Z</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.sortOption}
-                      onPress={() => handleSortOptionSelect("Z-A")}
-                    >
-                      <Text>Z-A</Text>
-                    </TouchableOpacity>
-                  </View>
-                </Modal>
+                  <Text>Z-A</Text>
+                </TouchableOpacity>
               </View>
+            </Modal>
+          </View>
             </View>
             {/* */}
   
-            <MyTable />
+            {
+          searchText === '' ? <>
+          
+          <MyTable />
+          <Button mode='elevated' style={{width:'25%',alignSelf:'flex-end',borderRadius:5,marginRight:10}} buttonColor="#6366f1" textColor="#fff" icon={'share-variant'} onPress={ShareExcel}>Export</Button>
+          </> : <MyTableSearchRes name={searchText} />
+        }
             {/* <View style={{width:'40%',alignSelf:'flex-end',marginRight:10}}>
           <Button icon="share" mode='contained' buttonColor="#03ba55" onPress={() => console.log('Pressed')}>
       Export Table

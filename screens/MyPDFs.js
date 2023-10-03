@@ -9,13 +9,15 @@ import {
   ScrollView,
   Image,
   Button,
+  Dimensions,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import BottomSheetFilter from "./BottomSheetFilter";
 import { IconButton, Provider, RadioButton } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createLanguageService } from "typescript";
 import { useNavigation } from "@react-navigation/native";
+import { TabView,SceneMap,TabBar } from "react-native-tab-view";
+import { Ionicons } from "@expo/vector-icons";
 const categories = [
   { id: 1, name: "Security" },
   { id: 2, name: "Web Dev" },
@@ -25,7 +27,7 @@ const categories = [
   { id: 6, name: "Mathematics" },
   // Add more categories as needed
 ];
-const MyPDFs = () => {
+/*const MyPDFs = () => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [mypdfs, setMypdfs] = useState([]);
   const getMyPDFs = async () => {
@@ -79,7 +81,56 @@ const MyPDFs = () => {
     setShowSortModal(true);
     setShow(true);
   };
-
+  const SearchByName = (props) => {
+    const name = props.name
+    const filteredPdfs = mypdfs.filter((pdf) => pdf.title.toLowerCase().includes(name.toLowerCase()));
+    return <ScrollView
+    contentContainerStyle={{
+      flexDirection: "row",
+      justifyContent: "center",
+      flexWrap: "wrap",
+      marginHorizontal: 20,
+      padding: 20,
+      rowGap: 20,
+      columnGap: 35,
+    }}
+  >
+    {filteredPdfs.map((pdf, idx) => {
+      return (
+        <View
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 5,
+          }}
+          key={idx}
+        >
+          <TouchableOpacity 
+          onPress={()=>navigation.navigate("MyWebComponent",{
+            pdfId:pdf.id,
+            pdfurl:'http://192.168.0.107:8000/'+pdf.link,
+            pdftitle:pdf.title,
+            pdftype:pdf.type
+          })}
+          >
+          <Image source={{uri:'http://192.168.0.107:8000/'+pdf.thumbnail}} style={{height:120,width:100}}/>
+          </TouchableOpacity>
+          
+          <Text
+            style={{
+              color: "#fff",
+              width:pdf.title.length > 15 ? 80 : null,
+              textAlign:'center'
+            }}
+          >
+            {pdf.title}
+          </Text>
+        </View>
+      );
+    })}
+  </ScrollView>
+    // do something with the filtered PDFs
+  };
   return (
     <Provider>
       <View style={{ flex: 1, backgroundColor: "#1e2a23" }}>
@@ -112,7 +163,6 @@ const MyPDFs = () => {
                 onChangeText={handleSearchTextChange}
               />
             </View>
-  
             <View style={{}}>
               {showCancelButton ? (
                 <TouchableOpacity onPress={handleCancelPress}>
@@ -130,46 +180,8 @@ const MyPDFs = () => {
               )}
             </View>
           </View>
-          {/* <View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  marginHorizontal: 15,
-                  marginBottom: 20,
-                  columnGap: 10,
-                }}
-              >
-                {categories.map((category) => (
-                  <TouchableOpacity
-                    key={category.id}
-                    onPress={() => handleCategoryPress(category)}
-                    style={{
-                      paddingHorizontal: 10,
-                      paddingVertical: 8,
-                      backgroundColor:
-                        selectedCategory === category.id
-                          ? "#0ad143"
-                          : "lightgrey",
-                      borderRadius: 5,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color:
-                          selectedCategory === category.id ? "white" : "black",
-                        fontSize: 18,
-                        fontWeight: "500",
-                      }}
-                    >
-                      {category.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-          </View> */}
-          <ScrollView
+          {
+            searchText === '' ? <ScrollView
             contentContainerStyle={{
               flexDirection: "row",
               justifyContent: "center",
@@ -191,6 +203,7 @@ const MyPDFs = () => {
                   key={idx}
                 >
                   <TouchableOpacity onPress={()=>navigation.navigate("MyWebComponent",{
+                    pdfId:pdf.id,
                     pdfurl:'http://192.168.0.107:8000/'+pdf.link,
                     pdftitle:pdf.title,
                     pdftype:pdf.type
@@ -210,7 +223,9 @@ const MyPDFs = () => {
                 </View>
               );
             })}
-          </ScrollView>
+          </ScrollView> : <SearchByName name={searchText} />
+          }
+          
           <BottomSheetFilter
             show={show}
             onDismiss={() => {
@@ -322,4 +337,274 @@ const styles = StyleSheet.create({
     margin: 15,
   },
   container: {},
-});
+});*/
+const MyPDFs = () => {
+  const [pdfArr,setPdfArr] = useState([])
+    const [pptxArr,setPptxArr] = useState([])
+    const [docxArr,setDocxArr] = useState([])
+    const [vidArr,setVidArr] = useState([])
+    const navigation = useNavigation()
+  const getMyCourses = async () => {
+    const token = await AsyncStorage.getItem('token')
+    if(token !== null){
+      try {
+        const response = await fetch('http://192.168.0.107:8000/api/getOwnedCourses',{
+            method:"GET",
+            headers:{
+              "Authorization":`Bearer ${token}`
+            }
+        })
+        const resData =await response.json()
+        console.log('length',resData.courses.pdf.length)
+        setPdfArr(!resData.courses.pdf ? [] : resData.courses.pdf)
+        setPptxArr(!resData.courses.pptx ? [] : resData.courses.pptx)
+        setDocxArr(!resData.courses.docx ? [] : resData.courses.docx)
+        setVidArr(!resData.courses.mp4 ? [] : resData.courses.mp4)
+        
+    }
+    catch(err){
+        console.log(err)
+    }
+    }
+    
+}
+useEffect(()=> {
+    getMyCourses()
+},[])
+const FirstRoute = () => {
+  if(pdfArr.length !== 0){
+    return (
+      <ScrollView style={[styles.scene, {  }]}>
+          {
+              
+              pdfArr.map((pdf,idx)=>{
+                  return (
+          <View key={idx}>
+              <TouchableOpacity
+              onPress={()=>navigation.navigate("MyWebComponent",{
+                pdfId:pdf.get_course.id,
+                pdfurl:'http://192.168.0.107:8000/'+pdf.get_course.link,
+                pdftitle:pdf.get_course.title,
+                pdftype:pdf.get_course.type
+              })}
+              style={{flexDirection:"row",alignItems:'center',justifyContent:'space-between',padding:25}}>
+                  <View style={{flexDirection:'row',alignItems:'center',gap:10,}}>
+                      <Image 
+                      source={{uri:'http://192.168.0.107:8000/'+pdf.get_course.thumbnail}}
+                      style={{width:60,height:60,overflow:"hidden",borderRadius:8}}
+                      />
+                      <View>
+                          <Text style={{fontSize:18,fontWeight:"600"}}>{pdf.get_course.title}</Text>
+                          <Text style={{fontSize:16}}>{pdf.get_course.get_category.name}</Text>
+                      </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20}/>
+                  
+                  
+                  
+              </TouchableOpacity>
+              <View style={{height:1,backgroundColor:"#ccc"}} />
+          </View>
+                  )
+              }) 
+          }
+          
+      </ScrollView>
+      
+      );
+  }
+  return (
+    <View style={[styles.scene,{justifyContent:'center',alignItems:'center'}]}>
+      <Text>No PDFs</Text>
+    </View>
+  )
+}
+    
+  const SecondRoute = () => {
+    if(pptxArr.length !== 0){
+      return (
+        <ScrollView style={[styles.scene, {  }]}>
+            {
+                
+                pptxArr.map((pptx,idx)=>{
+                    return (
+            <View key={idx}>
+                <TouchableOpacity 
+                onPress={()=>navigation.navigate("MyWebComponent",{
+                  pdfId:pptx.get_course.id,
+                  pdfurl:'http://192.168.0.107:8000/'+pptx.get_course.link,
+                  pdftitle:pptx.get_course.title,
+                  pdftype:pptx.get_course.type
+                })}
+                style={{flexDirection:"row",alignItems:'center',justifyContent:'space-between',padding:25}}>
+                    <View style={{flexDirection:'row',alignItems:'center',gap:10,}}>
+                        <Image 
+                        source={{uri:'http://192.168.0.107:8000/'+pptx.get_course.thumbnail}}
+                        style={{width:60,height:60,overflow:"hidden",borderRadius:8}}
+                        />
+                        <View>
+                            <Text style={{fontSize:18,fontWeight:"600"}}>{pptx.get_course.title}</Text>
+                            <Text style={{fontSize:16}}>{pptx.get_course.get_category.name}</Text>
+                        </View>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20}/>
+                    
+                    
+                    
+                </TouchableOpacity>
+                <View style={{height:1,backgroundColor:"#ccc"}} />
+            </View>
+                    )
+                }) 
+            }
+            
+        </ScrollView>
+        
+        );
+    }
+    return (
+      <View style={[styles.scene,{justifyContent:'center',alignItems:'center'}]}>
+        <Text>No PPTX</Text>
+      </View>
+    )
+}
+  const ThirdRoute = () => {
+    if(docxArr.length !== 0){
+      return (
+        <ScrollView style={[styles.scene, {  }]}>
+            {
+                
+                docxArr.map((docx,idx)=>{
+                    return (
+            <View key={idx}>
+                <TouchableOpacity
+                onPress={()=>navigation.navigate(docx.get_course.type === 'mp4' ? "CourseDetails": "BookDetails",{
+                  cid:docx.get_course.id,
+                  cat:docx.get_course.get_category.name,
+                  uploader:docx.get_course.get_user.name,
+                  cType:docx.get_course.type
+                })}
+                style={{flexDirection:"row",alignItems:'center',justifyContent:'space-between',padding:25}}>
+                    <View style={{flexDirection:'row',alignItems:'center',gap:10,}}>
+                        <Image 
+                        source={{uri:'http://192.168.0.107:8000/'+docx.get_course.thumbnail}}
+                        style={{width:60,height:60,overflow:"hidden",borderRadius:8}}
+                        />
+                        <View>
+                            <Text style={{fontSize:18,fontWeight:"600"}}>{docx.get_course.title}</Text>
+                            <Text style={{fontSize:16}}>{docx.get_course.get_category.name}</Text>
+                        </View>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20}/>
+                    
+                    
+                    
+                </TouchableOpacity>
+                <View style={{height:1,backgroundColor:"#ccc"}} />
+            </View>
+                    )
+                }) 
+            }
+            
+        </ScrollView>
+        
+        );
+    }
+    return (
+      <View style={[styles.scene,{justifyContent:'center',alignItems:'center'}]}>
+        <Text>No DOCX</Text>
+      </View>
+    )
+}
+  const FourthRoute = () => {
+    if(vidArr.length !== 0){
+      return (
+        <ScrollView style={[styles.scene, {  }]}>
+            {
+                
+                vidArr.map((vid,idx)=>{
+                    return (
+            <View key={idx}>
+                <TouchableOpacity 
+                onPress={()=>navigation.navigate("VideoSection",{
+                  url:vid.get_course.link
+                })}
+                style={{flexDirection:"row",alignItems:'center',justifyContent:'space-between',padding:25}}>
+                    <View style={{flexDirection:'row',alignItems:'center',gap:10,}}>
+                        <Image 
+                        source={{uri:'http://192.168.0.107:8000/'+vid.get_course.thumbnail}}
+                        style={{width:60,height:60,overflow:"hidden",borderRadius:8}}
+                        />
+                        <View>
+                            <Text style={{fontSize:18,fontWeight:"600"}}>{vid.get_course.title}</Text>
+                            <Text style={{fontSize:16}}>{vid.get_course.get_category.name}</Text>
+                        </View>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20}/>
+                    
+                    
+                    
+                </TouchableOpacity>
+                <View style={{height:1,backgroundColor:"#ccc"}} />
+            </View>
+                    )
+                }) 
+            }
+            
+        </ScrollView>
+        
+        );
+    }
+    return (
+      <View style={[styles.scene,{justifyContent:'center',alignItems:'center'}]}>
+        <Text>No Videos</Text>
+      </View>
+    )
+}
+  const renderTabBar = props => (
+    <TabBar
+      {...props}
+      indicatorStyle={{ backgroundColor: '#03ba55' }}
+      style={{ backgroundColor: '#fff' }}
+      labelStyle={{ color: '#03ba55' }}
+      inactiveColor='#000'
+    //   pressOpacity={0.5}
+    
+    //   inactiveColor='red'
+    />
+  );
+  
+  
+    const [index, setIndex] = useState(0);
+    const [routes,setRoutes] = useState([
+      { key: 'first', title: `PDF` },
+      { key: 'second', title: 'PPTX' },
+      { key: 'third', title: 'DOCX' },
+      { key: 'fourth', title: 'MP4' },
+    ]);
+  
+    const renderScene = SceneMap({
+      first: FirstRoute,
+      second: SecondRoute,
+      third:ThirdRoute,
+      fourth:FourthRoute
+    });
+  return (
+    <TabView
+        navigationState={{ index, routes }}
+        renderScene={renderScene}
+        onIndexChange={setIndex}
+        initialLayout={{ width: Dimensions.get('window').width }}
+        
+        renderTabBar={renderTabBar}
+        />
+  )
+}
+
+export default MyPDFs;
+
+const styles = StyleSheet.create({
+  scene:{
+    flex:1
+  }
+})

@@ -18,6 +18,7 @@ import React, { useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect } from "react";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 const width = Dimensions.get("window").width;
 
 const AddReview = ({route}) => {
@@ -133,7 +134,7 @@ const AddReview = ({route}) => {
     
     <TouchableWithoutFeedback onPress={() => {Keyboard.dismiss(); handleStarPress(0)}}>
       <View style={{ backgroundColor: "#fff", flex: 1 }}>
-        <View style={{ flexDirection: "row", gap: 15, marginHorizontal: 30,marginVertical:20 }}>
+        <View style={{ flexDirection: "row", gap: 15, marginHorizontal: 30,marginVertical:15 }}>
           <Image
             source={{uri: 'http://192.168.0.107:8000/'+course.thumbnail}}
             style={{ width: 120, height: 120, borderRadius: 7 }}
@@ -158,16 +159,58 @@ const AddReview = ({route}) => {
             value={text}
             onChangeText={handleTextChange}
             style={styles.textArea}
-            placeholder="What did you like the most about this course ?"
+            placeholder={"What did you like the most about this course ?"}
           />
           <Text style={styles.characterCount}>
             {characterLimit - text.length} characters remaining
           </Text>
-          <Text style={[styles.ratingText,{marginTop:15}]}>Rate This Course out of 5</Text>
+          
           <View>
-      <View style={{flexDirection: "row", alignSelf: "center"}}>
-        
-        <IconButton
+      <View style={{gap:3}}>
+      <Text style={[styles.ratingText,{marginTop:15}]}>Rate it Out Of 5</Text>
+      <View style={{flexDirection:'row',alignSelf:'flex-start',gap:3}}>
+        <Ionicons 
+        name="star" 
+        color={starRating >= 1 ? '#ffc107' : '#b5b2b2'} 
+        onPress={() => handleStarPress(1)}
+        size={20}
+        />
+        <Ionicons 
+        name="star" 
+        color={starRating >= 2 ? '#ffc107' : '#b5b2b2'} 
+        onPress={() => handleStarPress(2)}
+        size={20}
+        />
+        <Ionicons 
+        name="star" 
+        color={starRating >= 3 ? '#ffc107' : '#b5b2b2'} 
+        onPress={() => handleStarPress(3)}
+        size={20}
+        />
+        <Ionicons 
+        name="star" 
+        color={starRating >= 4 ? '#ffc107' : '#b5b2b2'} 
+        onPress={() => handleStarPress(4)}
+        size={20}
+        />
+        <Ionicons
+        name="star" 
+        color={starRating >= 5 ? '#ffc107' : '#b5b2b2'} 
+        onPress={() => handleStarPress(5)}
+        size={20}
+        />
+      </View>
+      <View style={{height:1,backgroundColor:'#ccc',marginVertical:10}} />
+      <View style={{flexDirection:'column',gap:10}}>
+        <View style={{flexDirection:'row',alignItems:'center',gap:15}}>
+          <View style={{height:70,width:70,borderRadius:100,backgroundColor:"#ccc"}} />
+          <View style={{height:10,width:'30%',borderRadius:30,backgroundColor:"#ccc"}} />
+        </View>
+        <View style={{height:10,width:'70%',backgroundColor:'#ccc',borderRadius:30}}/>
+        <View style={{height:10,width:'90%',backgroundColor:'#ccc',borderRadius:30}}/>
+        <Ionicons name="chevron-down" color={"#ccc"} style={{alignSelf:'center'}} size={24} />
+      </View>
+        {/* <IconButton
           icon="star"
           iconColor={starRating >= 1 ? '#ffc107' : '#b5b2b2'}
           size={28}
@@ -201,11 +244,11 @@ const AddReview = ({route}) => {
           size={28}
           onPress={() => handleStarPress(5)}
           style={styles.starIcon}
-        />
+        /> */}
       </View>
-      <Text style={styles.ratingText}>
+      {/* <Text style={styles.ratingText}>
         Rating: {starRating} / 5
-      </Text>
+      </Text> */}
     </View>
     
         </View>
@@ -263,7 +306,7 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 16,
     fontWeight: 'bold',
-    textAlign:'center'
+    textAlign:'left'
   },
   modalContainer: {
     flex: 1,

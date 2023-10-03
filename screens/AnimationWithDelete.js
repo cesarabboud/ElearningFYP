@@ -1,35 +1,27 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState } from 'react';
+import { Image } from 'react-native';
 import {
     StyleSheet,
     Text,
     TouchableOpacity,
     TouchableHighlight,
     View,
-    Image
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { SwipeListView } from 'react-native-swipe-list-view';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const Basic = ({answers}) => {
-  const customArray = [
-    {
-      id:1,
-      msg:"hi"
-    },
-    {
-      id:2,
-      msg:"how are you"
-    }
-  ];
+import { SwipeListView } from 'react-native-swipe-list-view';
+
+export default function Basic({repliesData,idOfUser}) {
+    const [repliesAfterDeletion,setrepliesAfterDeletion] = useState([])
     const [listData, setListData] = useState(
-        answers.map((item, index) => ({ 
+        repliesData.map((item, index) => ({ 
             key: `${index}`,
             id:item.id,
-            answer: item.answer,
-            uname:item.get_user.name,
+            resp:item.response,
             picture:item.get_user.profilepicture,
-            answered:item.answered
+            uName:item.get_user.name,
+            userId:item.get_user.id,
+            test:true
         }))
     );
 
@@ -39,20 +31,31 @@ const Basic = ({answers}) => {
         }
     };
 
-    const deleteRow = async (rowMap, rowKey ,answerId) => {
+    const deleteRow = async (rowMap, rowKey, replyId) => {
         closeRow(rowMap, rowKey);
-        // const newData = [...listData];
-        // const prevIndex = listData.findIndex(item => item.key === rowKey);
-        // newData.splice(prevIndex, 1);
-        // setListData(newData);
+        const newData = [...listData];
+        const prevIndex = listData.findIndex(item => item.key === rowKey);
+        newData.splice(prevIndex, 1);
+        setListData(newData);
         const token = await AsyncStorage.getItem('token')
         if(token !== null){
             try{
-                const response=await fetch(`http://192.168.0.105:8000/api/deleteAnswer/${answerId}`,{
-                    method:"GET",
+                const response = await fetch('http://192.168.0.107:8000/api/deleteReply/'+replyId,{
+                    method:"POST"
                 })
                 const resData = await response.json()
                 console.log(resData)
+                setrepliesAfterDeletion(resData.repliesArr)
+                console.log(resData.repliesArr)
+                setListData(resData.repliesArr.map((item, index) => ({ 
+                    key: `${index}`,
+                    id:item.id,
+                    resp:item.response,
+                    picture:item.get_user.profilepicture,
+                    uName:item.get_user.name,
+                    userId:item.get_user.id,
+                    test:true
+                })))
             }
             catch(err){
                 console.log(err)
@@ -66,51 +69,49 @@ const Basic = ({answers}) => {
 
     const renderItem = data => (
         <TouchableHighlight
-            onPress={() => console.log('You touched me :'+data.item.text)}
+            onPress={() => console.log('You touched me')}
             style={styles.rowFront}
             underlayColor={'#AAA'}
         >
-            <View>
-                {/* <Text>{data.item.id}</Text> */}
-                <View style={{flexDirection:'row',gap:10}}>
-                    <View style={{ borderRadius: "100",width:60, overflow: "hidden" }}>
-                        <Image
-                        source={{uri: 'http://192.168.0.105:8000/'+data.item.picture}}
-                            //source={require("../images/profilepic.jpg")}
-                            style={{ width: 60, height: 60,backgroundColor:'#ccc' }}
-                            resizeMode='cover'
+            <View style={{padding:10,overflow:"hidden",flexDirection:'row',alignItems:'center',marginLeft:40,gap:5}}>
+                    <View>
+                        <Image 
+                        style={{width:20,height:20,overflow:"hidden"}}
+                        source={{uri:'http://192.168.0.107:8000/'+data.item.picture}}
                         />
                     </View>
-                    <View style={{gap:10}}>
-                    <Text>{data.item.uname} {data.item.id}</Text>
-                    <Text>{data.item.answer} {data.item.answered ? <Ionicons name="checkbox" color={'#03ba55'} size={20}/> : null}</Text>
+                    <View>
+                    <Text>{data.item.uName}</Text>
+                    <Text>{data.item.resp}</Text>
                     </View>
                     
-                    
-                    
-                </View>
+                
                 
             </View>
         </TouchableHighlight>
     );
-    
-    const renderHiddenItem = (data, rowMap) => (
-        <View style={styles.rowBack}>
-            {/* <Text>Left</Text> */}
-            <TouchableOpacity
-                style={[styles.backRightBtn, styles.backRightBtnLeft]}
-                onPress={() => closeRow(rowMap, data.item.key)}
-            >
-                <Text style={styles.backTextWhite}>Close</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={[styles.backRightBtn, styles.backRightBtnRight]}
-                onPress={() => deleteRow(rowMap, data.item.key,data.item.id)}
-            >
-                <Text style={styles.backTextWhite}>Delete</Text>
-            </TouchableOpacity>
-        </View>
-    );
+
+    const renderHiddenItem = (data, rowMap) => {
+        if(data.item.userId === idOfUser){
+            return (
+                <View style={styles.rowBack}>
+                    <Text>Left</Text>
+                    <TouchableOpacity
+                        style={[styles.backRightBtn, styles.backRightBtnLeft]}
+                        onPress={() => closeRow(rowMap, data.item.key)}
+                    >
+                        <Text style={styles.backTextWhite}>Close</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.backRightBtn, styles.backRightBtnRight]}
+                        onPress={() => deleteRow(rowMap, data.item.key ,data.item.id)}
+                    >
+                        <Text style={styles.backTextWhite}>Delete</Text>
+                    </TouchableOpacity>
+                </View>
+            );
+        }
+    } 
 
     return (
         <View style={styles.container}>
@@ -118,7 +119,7 @@ const Basic = ({answers}) => {
                 data={listData}
                 renderItem={renderItem}
                 renderHiddenItem={renderHiddenItem}
-                // leftOpenValue={75}
+                leftOpenValue={75}
                 rightOpenValue={-150}
                 previewRowKey={'0'}
                 previewOpenValue={-40}
@@ -139,11 +140,10 @@ const styles = StyleSheet.create({
     },
     rowFront: {
         // alignItems: 'center',
-        backgroundColor: '#CCC',
-        borderBottomColor: '#fff',
-        borderBottomWidth: 1,
-        justifyContent: 'center',
-        height: 70,
+        backgroundColor: '#f5f5f5',
+        // borderBottomColor: 'black',
+        // borderBottomWidth: 1,
+        // justifyContent: 'center',
     },
     rowBack: {
         alignItems: 'center',
@@ -170,4 +170,3 @@ const styles = StyleSheet.create({
         right: 0,
     },
 });
-export default Basic;
